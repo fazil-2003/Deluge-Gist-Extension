@@ -1,0 +1,111 @@
+
+//sample layout button handler
+info target;
+tabid = target.get("tab_id");
+info tabid;
+if(tabid.equalsIgnoreCase("hometab"))
+{
+	info user;
+	numbers = List();
+	numbers.add(1);
+	// 	numbers.add(2);
+	// 	numbers.add(3);
+	// 	numbers.add(4);
+	// 	numbers.add(5);
+	info numbers;
+	elements = list();
+	for each  i in numbers
+	{
+		searchdetails = invokeurl
+		[
+			url :"https://api.github.com/gists?per_page=100&page=" + i
+			type :GET
+			parameters:""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		for each  searchdetail in searchdetails
+		{
+			searchedlist = searchdetail.getJSON("files").keys().get(0);
+			searchedid = searchdetail.getJSON("id");
+			elements.add({"value":searchedid,"label":searchedlist});
+		}
+	}
+	info elements;
+	return {"type":"form","title":"Search for a Gist","name":"search","hint":"Search for a Gist here!!!","button_label":"Search","inputs":{{"label":"Enter keywords","name":"textarea","placeholder":"Choose from the list of gists","trigger_on_change":true,"multiple":false,"mandatory":true,"type":"dynamic_select","options":elements},{"name":"hidden","value":tabid,"type":"hidden"}},"action":{"type":"invoke.function","name":"searchinggists"}};
+}
+else if(tabid.equalsIgnoreCase("alltab"))
+{
+	info user;
+	numbers = List();
+	numbers.add(1);
+	// 	numbers.add(2);
+	// 	numbers.add(3);
+	// 	numbers.add(4);
+	// 	numbers.add(5);
+	info numbers;
+	elements = list();
+	for each  i in numbers
+	{
+		searchdetails = invokeurl
+		[
+			url :"https://api.github.com/gists/public?per_page=100&page=" + i
+			type :GET
+			parameters:""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		for each  searchdetail in searchdetails
+		{
+			searchedlist = searchdetail.getJSON("files").keys().get(0);
+			if(searchedlist.len() > 100)
+			{
+				searchedlist = searchedlist.substring(0,97) + "...";
+			}
+			searchedid = searchdetail.getJSON("id");
+			elements.add({"value":searchedid,"label":searchedlist});
+		}
+	}
+	info elements.size();
+	return {"type":"form","title":"Search for a Gist","name":"search","hint":"Search for a Gist here!!!","button_label":"Search","inputs":{{"label":"Enter keywords","name":"textarea","placeholder":"Choose from the list of gists","trigger_on_change":true,"multiple":false,"mandatory":true,"type":"dynamic_select","options":elements},{"name":"hidden","value":tabid,"type":"hidden"}},"action":{"type":"invoke.function","name":"searchinggists"}};
+}
+// ,{"label":"Starred - Gists","id":"startab"}
+else if(tabid.equalsIgnoreCase("startab"))
+{
+	info user;
+	numbers = List();
+	numbers.add(1);
+	// 	numbers.add(2);
+	// 	numbers.add(3);
+	// 	numbers.add(4);
+	// 	numbers.add(5);
+	info numbers;
+	elements = list();
+	for each  i in numbers
+	{
+		searchdetails = invokeurl
+		[
+			url :"https://api.github.com/gists/starred?per_page=100&page=" + i
+			type :GET
+			parameters:""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		for each  searchdetail in searchdetails
+		{
+			searchedlist = searchdetail.getJSON("files").keys().get(0);
+			if(searchedlist.len() > 100)
+			{
+				searchedlist = searchedlist.substring(0,97) + "...";
+			}
+			searchedid = searchdetail.getJSON("id");
+			elements.add({"value":searchedid,"label":searchedlist});
+		}
+	}
+	info elements.size();
+	return {"type":"form","title":"Search for a Gist","name":"search","hint":"Search for a Gist here!!!","button_label":"Search","inputs":{{"label":"Enter keywords","name":"textarea","placeholder":"Choose from the list of gists","trigger_on_change":true,"multiple":false,"mandatory":true,"type":"dynamic_select","options":elements},{"name":"hidden","value":tabid,"type":"hidden"}},"action":{"type":"invoke.function","name":"searchinggists"}};
+}
+return Map();

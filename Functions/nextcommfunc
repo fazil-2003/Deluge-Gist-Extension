@@ -1,0 +1,354 @@
+
+//sample layout button handler
+info user.getJSON("timezone");
+timezone = user.getJSON("timezone");
+info target;
+tabid = target.get("tab_id");
+info tabid;
+tabsList = {{"label":"Gists - Home","id":"hometab"},{"label":"Starred - Gists","id":"startab"},{"label":"All - Gists","id":"alltab"}};
+userdetails = invokeurl
+[
+	url :"https://api.github.com/user"
+	type :GET
+	parameters:""
+	detailed:false
+	connection:"githubgist"
+	content-type:"application/vnd.github+json"
+];
+info userdetails;
+Adminuser = userdetails.get("login");
+// info Adminuser;
+if(tabid.equalsIgnoreCase("hometab"))
+{
+	header = list();
+	sections = list();
+	ids = target.get("id");
+	ids = ids.toList("..");
+	page = ids.get(0).toNumber();
+	// 	info page;
+	gistid = ids.get(1);
+	// 	info gistid;
+	gist = invokeurl
+	[
+		url :"https://api.github.com/gists/" + gistid
+		type :GET
+		parameters:""
+		detailed:false
+		connection:"githubgist"
+		content-type:"application/vnd.github+json"
+	];
+	// 	info gist;
+	page = page + 1;
+	header = {"title":"page " + page,"navigation":"continue","buttons":{{"label":"+ Comment","type":"invoke.function","name":"CreategistComment","id":gistid,"emotion":"positive"}}};
+	comments = invokeurl
+	[
+		url :gist.get("comments_url") + "?per_page=10&page=" + page
+		type :GET
+		parameters:""
+		connection:"githubgist"
+	];
+	// 	info comments;
+	for each  comment in comments
+	{
+		// 		info comment;
+		// 		info elements;
+		cname = comment.get("user").get("login");
+		realname = cname;
+		// 		info cname;
+		if(cname.len() > 100)
+		{
+			cname = cname.subString(0,97) + "...";
+		}
+		avatar = comment.get("user").get("avatar_url");
+		body = comment.get("body");
+		if(body.contains("!") && body.contains("[") && body.contains("]") && body.contains("(") && body.contains(")"))
+		{
+			a1 = body.indexOf("[");
+			info a1;
+			a2 = body.indexOf("]");
+			info a2;
+			u1 = body.indexOf("(");
+			info u1;
+			u2 = body.indexOf(")");
+			info u2;
+			body = body.subString(a1,u1) + body.subString(u1,u2 + 1);
+			info body;
+		}
+		if(body.len() > 200)
+		{
+			body = body.subString(0,200) + "...";
+		}
+		commit = comment.get("updated_at");
+		committed = commit.subString(0,4) + "-" + commit.subString(5,7) + "-" + commit.subString(8,10) + " " + commit.substring(11,19);
+		//  committedes = commit.subString(0,4) + "-" + commit.subString(5,7) + "-" + commit.subString(8,10);
+		// 	info committed;
+		actdt = committed.unixEpoch("Europe/London");
+		mon = toDateTimeString(actdt,"yyyy-MMM-dd",timezone);
+		dates = mon.subString(9,11) + "-" + mon.subString(5,8) + "-" + mon.subString(0,4);
+		hh = toDateTimeString(actdt,"HH",timezone);
+		ampm = "AM";
+		if(hh.toNumber() > 12)
+		{
+			ampm = "PM";
+			hh = hh.toNumber() % 12;
+			hh = hh.toString();
+		}
+		else if(hh.toNumber() == 12)
+		{
+			ampm = "PM";
+		}
+		tim = toDateTimeString(actdt,"mm:ss",timezone);
+		actdatetime = dates + " " + hh + ":" + tim + " " + ampm;
+		elements = list();
+		elements.add({"type":"activity","title":cname,"description":"Commented at: " + actdatetime + "\n" + body,"image_url":avatar});
+		info realname;
+		info Adminuser;
+		if(realname == Adminuser)
+		{
+			elements.add({"type":"buttons","buttons":{{"label":"Edit","type":"invoke.function","name":"toeditcomment","id":gistid,"emotion":"positive"},{"label":"Delete","type":"invoke.function","name":"todelete","id":gistid,"emotion":"negative"}}});
+		}
+		// 		info elements;
+		elements.add({"type":"divider"});
+		sections.add({"id":comment.getJSON("id"),"elements":elements});
+		info sections.size();
+	}
+	nextpage = page + 1;
+	nextcomments = invokeurl
+	[
+		url :gist.get("comments_url") + "?per_page=10&page=" + nextpage
+		type :GET
+		parameters:""
+		connection:"githubgist"
+	];
+	// 	info nextcomments;
+	if(nextcomments.size() > 0)
+	{
+		buttons = List();
+		buttons.add({"label":"Next","type":"invoke.function","name":"nextcommfunc","id":page + ".." + gistid});
+		footer = {"text":" ","buttons":buttons};
+		return {"type":"applet","tabs":tabsList,"active_tab":tabid,"sections":sections,"header":header,"footer":footer};
+	}
+	return {"type":"applet","tabs":tabsList,"active_tab":tabid,"sections":sections,"header":header};
+}
+else if(tabid.equalsIgnoreCase("alltab"))
+{
+	header = list();
+	sections = list();
+	ids = target.get("id");
+	ids = ids.toList("..");
+	page = ids.get(0).toNumber();
+	info page;
+	gistid = ids.get(1);
+	info gistid;
+	gist = invokeurl
+	[
+		url :"https://api.github.com/gists/" + gistid
+		type :GET
+		parameters:""
+		detailed:false
+		connection:"githubgist"
+		content-type:"application/vnd.github+json"
+	];
+	// 	info gist;
+	page = page + 1;
+	header = {"title":"page " + page,"navigation":"continue","buttons":{{"label":"+ Comment","type":"invoke.function","name":"CreategistComment","id":gistid,"emotion":"positive"}}};
+	comments = invokeurl
+	[
+		url :gist.get("comments_url") + "?per_page=10&page=" + page
+		type :GET
+		parameters:""
+		connection:"githubgist"
+	];
+	info comments;
+	for each  comment in comments
+	{
+		// 		info comment;
+		// 		info elements;
+		cname = comment.get("user").get("login");
+		realname = cname;
+		info cname;
+		if(cname.len() > 100)
+		{
+			cname = cname.subString(0,97) + "...";
+		}
+		avatar = comment.get("user").get("avatar_url");
+		body = comment.get("body");
+		if(body.contains("!") && body.contains("[") && body.contains("]") && body.contains("(") && body.contains(")"))
+		{
+			a1 = body.indexOf("[");
+			info a1;
+			a2 = body.indexOf("]");
+			info a2;
+			u1 = body.indexOf("(");
+			info u1;
+			u2 = body.indexOf(")");
+			info u2;
+			body = body.subString(a1,u1) + body.subString(u1,u2 + 1);
+			info body;
+		}
+		if(body.len() > 200)
+		{
+			body = body.subString(0,200) + "...";
+		}
+		commit = comment.get("updated_at");
+		committed = commit.subString(0,4) + "-" + commit.subString(5,7) + "-" + commit.subString(8,10) + " " + commit.substring(11,19);
+		//  committedes = commit.subString(0,4) + "-" + commit.subString(5,7) + "-" + commit.subString(8,10);
+		// 	info committed;
+		actdt = committed.unixEpoch("Europe/London");
+		mon = toDateTimeString(actdt,"yyyy-MMM-dd",timezone);
+		dates = mon.subString(9,11) + "-" + mon.subString(5,8) + "-" + mon.subString(0,4);
+		hh = toDateTimeString(actdt,"HH",timezone);
+		ampm = "AM";
+		if(hh.toNumber() > 12)
+		{
+			ampm = "PM";
+			hh = hh.toNumber() % 12;
+			hh = hh.toString();
+		}
+		else if(hh.toNumber() == 12)
+		{
+			ampm = "PM";
+		}
+		tim = toDateTimeString(actdt,"mm:ss",timezone);
+		actdatetime = dates + " " + hh + ":" + tim + " " + ampm;
+		elements = list();
+		elements.add({"type":"activity","title":cname,"description":"Commented at: " + actdatetime + "\n" + body,"image_url":avatar});
+		if(realname == Adminuser)
+		{
+			elements.add({"type":"buttons","buttons":{{"label":"Edit","type":"invoke.function","name":"toeditcomment","id":gistid,"emotion":"positive"},{"label":"Delete","type":"invoke.function","name":"todelete","id":gistid,"emotion":"negative"}}});
+		}
+		elements.add({"type":"divider"});
+		sections.add({"id":comment.getJSON("id"),"elements":elements});
+		info sections.size();
+	}
+	nextpage = page + 1;
+	nextcomments = invokeurl
+	[
+		url :gist.get("comments_url") + "?per_page=10&page=" + nextpage
+		type :GET
+		parameters:""
+		connection:"githubgist"
+	];
+	// 	info nextcomments;
+	if(nextcomments.size() > 0)
+	{
+		buttons = List();
+		buttons.add({"label":"Next","type":"invoke.function","name":"nextcommfunc","id":page + ".." + gistid});
+		footer = {"text":" ","buttons":buttons};
+		return {"type":"applet","tabs":tabsList,"active_tab":tabid,"sections":sections,"header":header,"footer":footer};
+	}
+	return {"type":"applet","tabs":tabsList,"active_tab":tabid,"sections":sections,"header":header};
+}
+if(tabid.equalsIgnoreCase("startab"))
+{
+	header = list();
+	sections = list();
+	ids = target.get("id");
+	ids = ids.toList("..");
+	page = ids.get(0).toNumber();
+	// 	info page;
+	gistid = ids.get(1);
+	// 	info gistid;
+	gist = invokeurl
+	[
+		url :"https://api.github.com/gists/" + gistid
+		type :GET
+		parameters:""
+		detailed:false
+		connection:"githubgist"
+		content-type:"application/vnd.github+json"
+	];
+	// 	info gist;
+	page = page + 1;
+	header = {"title":"page " + page,"navigation":"continue","buttons":{{"label":"+ Comment","type":"invoke.function","name":"CreategistComment","id":gistid,"emotion":"positive"}}};
+	comments = invokeurl
+	[
+		url :gist.get("comments_url") + "?per_page=10&page=" + page
+		type :GET
+		parameters:""
+		connection:"githubgist"
+	];
+	// 	info comments;
+	for each  comment in comments
+	{
+		// 		info comment;
+		// 		info elements;
+		cname = comment.get("user").get("login");
+		realname = cname;
+		// 		info cname;
+		if(cname.len() > 100)
+		{
+			cname = cname.subString(0,97) + "...";
+		}
+		avatar = comment.get("user").get("avatar_url");
+		body = comment.get("body");
+		if(body.contains("!") && body.contains("[") && body.contains("]") && body.contains("(") && body.contains(")"))
+		{
+			a1 = body.indexOf("[");
+			info a1;
+			a2 = body.indexOf("]");
+			info a2;
+			u1 = body.indexOf("(");
+			info u1;
+			u2 = body.indexOf(")");
+			info u2;
+			body = body.subString(a1,u1) + body.subString(u1,u2 + 1);
+			info body;
+		}
+		if(body.len() > 206)
+		{
+			body = body.subString(0,200) + "...";
+		}
+		commit = comment.get("updated_at");
+		committed = commit.subString(0,4) + "-" + commit.subString(5,7) + "-" + commit.subString(8,10) + " " + commit.substring(11,19);
+		//  committedes = commit.subString(0,4) + "-" + commit.subString(5,7) + "-" + commit.subString(8,10);
+		// 	info committed;
+		actdt = committed.unixEpoch("Europe/London");
+		mon = toDateTimeString(actdt,"yyyy-MMM-dd",timezone);
+		dates = mon.subString(9,11) + "-" + mon.subString(5,8) + "-" + mon.subString(0,4);
+		hh = toDateTimeString(actdt,"HH",timezone);
+		ampm = "AM";
+		if(hh.toNumber() > 12)
+		{
+			ampm = "PM";
+			hh = hh.toNumber() % 12;
+			hh = hh.toString();
+		}
+		else if(hh.toNumber() == 12)
+		{
+			ampm = "PM";
+		}
+		tim = toDateTimeString(actdt,"mm:ss",timezone);
+		actdatetime = dates + " " + hh + ":" + tim + " " + ampm;
+		elements = list();
+		elements.add({"type":"activity","title":cname,"description":"Commented at: " + actdatetime + "\n" + body,"image_url":avatar});
+		info realname;
+		info Adminuser;
+		if(realname == Adminuser)
+		{
+			elements.add({"type":"buttons","buttons":{{"label":"Edit","type":"invoke.function","name":"toeditcomment","id":gistid,"emotion":"positive"},{"label":"Delete","type":"invoke.function","name":"todelete","id":gistid,"emotion":"negative"}}});
+		}
+		// 		info elements;
+		elements.add({"type":"divider"});
+		sections.add({"id":comment.getJSON("id"),"elements":elements});
+		info sections.size();
+	}
+	nextpage = page + 1;
+	nextcomments = invokeurl
+	[
+		url :gist.get("comments_url") + "?per_page=10&page=" + nextpage
+		type :GET
+		parameters:""
+		connection:"githubgist"
+	];
+	// 	info nextcomments;
+	if(nextcomments.size() > 0)
+	{
+		buttons = List();
+		buttons.add({"label":"Next","type":"invoke.function","name":"nextcommfunc","id":page + ".." + gistid});
+		footer = {"text":" ","buttons":buttons};
+		return {"type":"applet","tabs":tabsList,"active_tab":tabid,"sections":sections,"header":header,"footer":footer};
+	}
+	return {"type":"applet","tabs":tabsList,"active_tab":tabid,"sections":sections,"header":header};
+}
+return Map();

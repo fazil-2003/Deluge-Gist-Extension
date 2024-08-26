@@ -1,0 +1,429 @@
+
+response = Map();
+formValues = form.get("values");
+// info formValues;
+hidden = formValues.get("hidden");
+if(hidden.equalsIgnoreCase("slashcall"))
+{
+	description = formValues.get("gistdescription");
+	// info description;
+	public = formValues.get("public");
+	change = formValues.get("radio");
+	// info change;
+	gisttype = change.get("value");
+	// info gisttype;
+	if(gisttype.equalsIgnoreCase("codegist"))
+	{
+		filename = formValues.get("fileexe");
+		gistcode = formValues.get("gistcode");
+		header = Map();
+		filedetails = Map();
+		content = Map();
+		content.put("content",gistcode);
+		filedetails.put(filename,content);
+		header.put("description",description);
+		header.put("public",public);
+		header.put("files",filedetails);
+		info header;
+		addgists = invokeurl
+		[
+			url :"https://api.github.com/gists"
+			type :POST
+			parameters:header + ""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		info addgists;
+		id = addgists.get("id");
+		if(id != null)
+		{
+			response.put("type","banner");
+			response.put("text","Gist created successfully !");
+		}
+		else
+		{
+			response.put("type","banner");
+			response.put("text","Error while creating gists, please try again later !");
+		}
+	}
+	else if(gisttype.equalsIgnoreCase("filegist"))
+	{
+		info formValues;
+		fileexe = formValues.get("file");
+		info fileexe;
+		filecontent = fileexe.getfilecontent();
+		info filecontent;
+		header = Map();
+		filedetails = Map();
+		content = Map();
+		content.put("content",filecontent);
+		filedetails.put(fileexe,content);
+		header.put("description",description);
+		header.put("public",public);
+		header.put("files",filedetails);
+		info header;
+		addgists = invokeurl
+		[
+			url :"https://api.github.com/gists"
+			type :POST
+			parameters:header + ""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		info addgists;
+		id = addgists.get("id");
+		if(id != null)
+		{
+			response.put("type","banner");
+			response.put("text","Gist created successfully !");
+		}
+		else
+		{
+			response.put("type","banner");
+			response.put("text","Error while creating gists, please try again later !");
+		}
+	}
+}
+else if(hidden.equalsIgnoreCase("widgetcall"))
+{
+	// 	info formValues;
+	description = formValues.get("gistdescription");
+	// 	info description;
+	public = formValues.get("public");
+	change = formValues.get("radio");
+	gisttype = change.get("value");
+	if(gisttype.equalsIgnoreCase("codegist"))
+	{
+		filename = formValues.get("fileexe");
+		gistcode = formValues.get("gistcode");
+		header = Map();
+		filedetails = Map();
+		content = Map();
+		content.put("content",gistcode);
+		filedetails.put(filename,content);
+		header.put("description",description);
+		header.put("public",public);
+		header.put("files",filedetails);
+		info "HEADER :" + header;
+		addgists = invokeurl
+		[
+			url :"https://api.github.com/gists"
+			type :POST
+			parameters:header + ""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		// 		info addgists;
+		id = addgists.get("id");
+		if(id != null)
+		{
+			header = Map();
+			footer = Map();
+			sections = list();
+			header = list();
+			gistlist = list();
+			tabsList = {{"label":"Gists - Home","id":"hometab"},{"label":"Starred - Gists","id":"startab"},{"label":"All - Gists","id":"alltab"}};
+			mypage = 1;
+			header = {"title":"Gist - Home","navigation":"new","buttons":{{"label":"Search","type":"invoke.function","name":"tosearch","id":"hometab"},{"label":"Create","type":"invoke.function","name":"Creategist","id":"section"}}};
+			widgetview = invokeurl
+			[
+				url :"https://api.github.com/gists?per_page=10&page=" + mypage
+				type :GET
+				parameters:""
+				detailed:false
+				connection:"githubgist"
+				content-type:"application/vnd.github+json"
+			];
+			// info widgetview;
+			len = widgetview.size();
+			if(len != 0)
+			{
+				gistWidgetButtons = list();
+				i = 0;
+				for each  g in widgetview
+				{
+					gist = invokeurl
+					[
+						url :"https://api.github.com/gists/" + g.get("id")
+						type :GET
+						parameters:""
+						detailed:false
+						connection:"githubgist"
+						content-type:"application/vnd.github+json"
+					];
+					// info gist;
+					// info g;
+					name = gist.get("files");
+					name = name.keys().get(0);
+					if(name.len() > 100)
+					{
+						name = name.subString(0,97) + "...";
+					}
+					userdev = gist.get("owner");
+					userlogin = userdev.get("login");
+					// info userlogin;
+					infourl = "https://gist.github.com/" + userlogin;
+					touser = "[" + userlogin + "](" + infourl + ")";
+					desc = gist.get("description");
+					if(desc == null)
+					{
+						desc = name;
+					}
+					if(desc.len() > 256)
+					{
+						desc = desc.subString(0,250) + "...";
+					}
+					url = gist.get("html_url");
+					toview = "[" + name + "](" + url + ")";
+					currRev = gist.get("history").get(0).get("version");
+					gid = gist.get("id");
+					//////////////////////////////////////////////////////////////////////////////////////////////////////database
+					query_map = Map();
+					criteria_string = "gistid==" + gid;
+					query_map.put("criteria",criteria_string);
+					response_map = zoho.cliq.getRecords("fav",query_map);
+					starred = false;
+					mlist = response_map.get("list");
+					info mlist;
+					for each  x in mlist
+					{
+						info x;
+						info x.get("zuid");
+						info user;
+						if(x.get("zuid").equals(user.get("id")))
+						{
+							starred = true;
+						}
+					}
+					info query_map;
+					info starred;
+					///dbase////////////////////////////////////////////////////////////////////////////////////
+					dataList = list();
+					dataList.add({"type":"text","text":toview});
+					dataList.add({"type":"subtext","text":desc});
+					// 			{"label":"Star","type":"invoke.function","name":"tostar","id":gist.get("id"),"emotion":"positive"},
+					if(starred)
+					{
+						page = mypage;
+						dataList.add({"type":"buttons","buttons":{{"label":"Unstar","type":"invoke.function","name":"tostar","id":gist.get("id") + ".." + page,"emotion":"positive"},{"label":"Revisions","type":"invoke.function","name":"torev","id":gist.get("id"),"emotion":"positive"},{"label":"Comments","type":"invoke.function","name":"getcomments","id":gist.get("id"),"emotion":"positive"},{"label":"Download","type":"open.url","url":gist.get("html_url") + "/archive/" + currRev + ".zip","emotion":"positive"},{"label":"Delete","type":"invoke.function","name":"todelete","id":gist.get("id") + ".." + name,"emotion":"negative"}}});
+					}
+					else
+					{
+						page = mypage;
+						dataList.add({"type":"buttons","buttons":{{"label":"Star","type":"invoke.function","name":"tostar","id":gist.get("id") + ".." + page,"emotion":"positive"},{"label":"Revisions","type":"invoke.function","name":"torev","id":gist.get("id"),"emotion":"positive"},{"label":"Comments","type":"invoke.function","name":"getcomments","id":gist.get("id"),"emotion":"positive"},{"label":"Download","type":"open.url","url":gist.get("html_url") + "/archive/" + currRev + ".zip","emotion":"positive"},{"label":"Delete","type":"invoke.function","name":"todelete","id":gist.get("id") + ".." + name,"emotion":"negative"}}});
+					}
+					dataList.add({"type":"divider"});
+					sections.add({"id":i,"elements":dataList});
+					i = i + 1;
+				}
+				nextpage = mypage + 1;
+				allwidgetview = invokeurl
+				[
+					url :"https://api.github.com/gists?per_page=10&page=" + nextpage
+					type :GET
+					parameters:""
+					detailed:false
+					connection:"githubgist"
+					content-type:"application/vnd.github+json"
+				];
+				// 				info allwidgetview.size();
+				if(allwidgetview.size() > 0)
+				{
+					buttons = List();
+					buttons.add({"label":"Next","type":"invoke.function","name":"nextpagefunc","id":mypage});
+					footer = {"text":"","buttons":buttons};
+				}
+				return {"type":"applet","tabs":tabsList,"active_tab":"hometab","sections":sections,"header":header,"footer":footer};
+			}
+		}
+		else
+		{
+			response.put("type","banner");
+			response.put("text","Error while creating gists, please try again later !");
+		}
+	}
+	else if(gisttype.equalsIgnoreCase("filegist"))
+	{
+		info formValues;
+		fileexe = formValues.get("file");
+		info fileexe;
+		filecontent = fileexe.getfilecontent();
+		info filecontent;
+		header = Map();
+		filedetails = Map();
+		content = Map();
+		content.put("content",filecontent);
+		filedetails.put(fileexe,content);
+		header.put("description",description);
+		header.put("public",public);
+		header.put("files",filedetails);
+		info header;
+		addgists = invokeurl
+		[
+			url :"https://api.github.com/gists"
+			type :POST
+			parameters:header + ""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		info addgists;
+		id = addgists.get("id");
+		if(id != null)
+		{
+			header = Map();
+			footer = Map();
+			sections = list();
+			header = list();
+			gistlist = list();
+			tabsList = {{"label":"Gists - Home","id":"hometab"},{"label":"Starred - Gists","id":"startab"},{"label":"All - Gists","id":"alltab"}};
+			mypage = 1;
+			header = {"title":"Gist - Home","navigation":"new","buttons":{{"label":"Search","type":"invoke.function","name":"tosearch","id":"hometab"},{"label":"Create","type":"invoke.function","name":"Creategist","id":"section"}}};
+			widgetview = invokeurl
+			[
+				url :"https://api.github.com/gists?per_page=10&page=" + mypage
+				type :GET
+				parameters:""
+				detailed:false
+				connection:"githubgist"
+				content-type:"application/vnd.github+json"
+			];
+			// info widgetview;
+			len = widgetview.size();
+			if(len != 0)
+			{
+				gistWidgetButtons = list();
+				i = 0;
+				for each  g in widgetview
+				{
+					gist = invokeurl
+					[
+						url :"https://api.github.com/gists/" + g.get("id")
+						type :GET
+						parameters:""
+						detailed:false
+						connection:"githubgist"
+						content-type:"application/vnd.github+json"
+					];
+					// info gist;
+					// info g;
+					name = gist.get("files");
+					name = name.keys().get(0);
+					if(name.len() > 100)
+					{
+						name = name.subString(0,97) + "...";
+					}
+					userdev = gist.get("owner");
+					userlogin = userdev.get("login");
+					// info userlogin;
+					infourl = "https://gist.github.com/" + userlogin;
+					touser = "[" + userlogin + "](" + infourl + ")";
+					desc = gist.get("description");
+					if(desc == null)
+					{
+						desc = name;
+					}
+					if(desc.len() > 256)
+					{
+						desc = desc.subString(0,250) + "...";
+					}
+					url = gist.get("html_url");
+					toview = "[" + name + "](" + url + ")";
+					currRev = gist.get("history").get(0).get("version");
+					gid = gist.get("id");
+					//////////////////dbse
+					query_map = Map();
+					criteria_string = "gistid==" + gid;
+					query_map.put("criteria",criteria_string);
+					response_map = zoho.cliq.getRecords("fav",query_map);
+					starred = false;
+					mlist = response_map.get("list");
+					info mlist;
+					for each  x in mlist
+					{
+						info x;
+						info x.get("zuid");
+						info user;
+						if(x.get("zuid").equals(user.get("id")))
+						{
+							starred = true;
+						}
+					}
+					info query_map;
+					info starred;
+					//////////////////dbse
+					dataList = list();
+					dataList.add({"type":"text","text":toview});
+					dataList.add({"type":"subtext","text":desc});
+					if(starred)
+					{
+						page = mypage;
+						dataList.add({"type":"buttons","buttons":{{"label":"Unstar","type":"invoke.function","name":"tostar","id":gist.get("id") + ".." + page,"emotion":"positive"},{"label":"Revisions","type":"invoke.function","name":"torev","id":gist.get("id"),"emotion":"positive"},{"label":"Comments","type":"invoke.function","name":"getcomments","id":gist.get("id"),"emotion":"positive"},{"label":"Download","type":"open.url","url":gist.get("html_url") + "/archive/" + currRev + ".zip","emotion":"positive"},{"label":"Delete","type":"invoke.function","name":"todelete","id":gist.get("id") + ".." + name,"emotion":"negative"}}});
+					}
+					else
+					{
+						page = mypage;
+						dataList.add({"type":"buttons","buttons":{{"label":"Star","type":"invoke.function","name":"tostar","id":gist.get("id") + ".." + page,"emotion":"positive"},{"label":"Revisions","type":"invoke.function","name":"torev","id":gist.get("id"),"emotion":"positive"},{"label":"Comments","type":"invoke.function","name":"getcomments","id":gist.get("id"),"emotion":"positive"},{"label":"Download","type":"open.url","url":gist.get("html_url") + "/archive/" + currRev + ".zip","emotion":"positive"},{"label":"Delete","type":"invoke.function","name":"todelete","id":gist.get("id") + ".." + name,"emotion":"negative"}}});
+					}
+					dataList.add({"type":"divider"});
+					sections.add({"id":i,"elements":dataList});
+					i = i + 1;
+				}
+				nextpage = mypage + 1;
+				allwidgetview = invokeurl
+				[
+					url :"https://api.github.com/gists?per_page=10&page=" + nextpage
+					type :GET
+					parameters:""
+					detailed:false
+					connection:"githubgist"
+					content-type:"application/vnd.github+json"
+				];
+				info allwidgetview.size();
+				if(allwidgetview.size() > 0)
+				{
+					buttons = List();
+					buttons.add({"label":"Next","type":"invoke.function","name":"nextpagefunc","id":mypage});
+					footer = {"text":"","buttons":buttons};
+				}
+				return {"type":"applet","tabs":tabsList,"active_tab":"hometab","sections":sections,"header":header,"footer":footer};
+			}
+		}
+		else
+		{
+			response.put("type","banner");
+			response.put("text","Error while creating gists, please try again later !");
+		}
+	}
+}
+return response;
+
+
+Form Change handler:
+
+
+info target;
+targetName = target.get("name");
+info targetName;
+inputValues = form.get("values");
+info inputValues;
+actions = list();
+if(targetName.equals("radio"))
+{
+	if(inputValues.getJSON("radio").getJSON("value").equals("codegist"))
+	{
+		actions.add({"type":"remove","name":"file"});
+		actions.add({"type":"add_after","name":"radio","input":{"type":"text","label":"Filename","placeholder":"your gist filename","name":"fileexe","mandatory":true}});
+		actions.add({"type":"add_after","name":"fileexe","input":{"type":"textarea","label":"Gist codes","name":"gistcode","mandatory":true,"max_length":5000,"placeholder":"Your Gistcode goes here"}});
+	}
+	else
+	{
+		actions.add({"type":"remove","name":"fileexe"});
+		actions.add({"type":"remove","name":"gistcode"});
+		actions.add({"type":"add_after","name":"radio","input":{"label":"Upload File","name":"file","placeholder":"Upload your gist file here !","mandatory":true,"type":"file"}});
+	}
+}
+return {"type":"form_modification","actions":actions};

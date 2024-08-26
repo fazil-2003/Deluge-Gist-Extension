@@ -1,0 +1,91 @@
+
+info user.getJSON("timezone");
+timezone = user.getJSON("timezone");
+response = Map();
+formValues = form.get("values");
+//getting the form values
+gcid = formValues.get("gcid");
+info gcid;
+gid = formValues.get("gid");
+info gid;
+comment = formValues.get("textarea");
+info comment;
+content = Map();
+// sub map to filedetails map
+content.put("body",comment);
+toupdate = invokeurl
+[
+	url :"https://api.github.com/gists/" + gid + "/comments/" + gcid
+	type :PATCH
+	parameters:content + ""
+	detailed:false
+	connection:"githubgist"
+	content-type:"application/vnd.github+json"
+];
+info toupdate;
+id = toupdate.get("id");
+// info id;
+// handling the record is created or not
+if(id != null)
+{
+	response.put("type","banner");
+	response.put("text","Gist comment Edited successfully !");
+	elements = list();
+	cname = toupdate.get("user").get("login");
+	realname = cname;
+	if(cname.len() > 100)
+	{
+		cname = cname.subString(0,97) + "...";
+	}
+	avatar = toupdate.get("user").get("avatar_url");
+	body = toupdate.get("body");
+	if(body.contains("!") && body.contains("[") && body.contains("]") && body.contains("(") && body.contains(")"))
+	{
+		a1 = body.indexOf("[");
+		info a1;
+		a2 = body.indexOf("]");
+		info a2;
+		u1 = body.indexOf("(");
+		info u1;
+		u2 = body.indexOf(")");
+		info u2;
+		body = body.subString(a1,u1) + body.subString(u1,u2 + 1);
+		info body;
+	}
+	if(body.len() > 200)
+	{
+		body = body.subString(0,200) + "...";
+	}
+	commit = toupdate.get("updated_at");
+	committed = commit.subString(0,4) + "-" + commit.subString(5,7) + "-" + commit.subString(8,10) + " " + commit.substring(11,19);
+	//  committedes = commit.subString(0,4) + "-" + commit.subString(5,7) + "-" + commit.subString(8,10);
+	// 	info committed;
+	actdt = committed.unixEpoch("Europe/London");
+	mon = toDateTimeString(actdt,"yyyy-MMM-dd",timezone);
+	dates = mon.subString(9,11) + "-" + mon.subString(5,8) + "-" + mon.subString(0,4);
+	hh = toDateTimeString(actdt,"HH",timezone);
+	ampm = "AM";
+	if(hh.toNumber() > 12)
+	{
+		ampm = "PM";
+		hh = hh.toNumber() % 12;
+		hh = hh.toString();
+	}
+	else if(hh.toNumber() == 12)
+	{
+		ampm = "PM";
+	}
+	tim = toDateTimeString(actdt,"mm:ss",timezone);
+	actdatetime = dates + " " + hh + ":" + tim + " " + ampm;
+	elements = list();
+	elements.add({"type":"activity","title":cname,"description":"Commented at: " + actdatetime + "\n" + body,"image_url":avatar});
+	elements.add({"type":"buttons","buttons":{{"label":"Edit","type":"invoke.function","name":"toeditcomment","id":gid,"emotion":"positive"},{"label":"Delete","type":"invoke.function","name":"todelete","id":gid,"emotion":"negative"}}});
+	elements.add({"type":"divider"});
+	return {"type":"section","elements":elements,"status":{"text":"Gist Comment Successfully Edited","type":"success"}};
+}
+else
+{
+	response.put("type","banner");
+	response.put("text","Error while updating gists comment, please try again later !");
+}
+return response;

@@ -1,0 +1,37 @@
+
+try 
+{
+	info target;
+	gid = target.get("id");
+	gist = invokeurl
+	[
+		url :"https://api.github.com/gists/" + gid
+		type :GET
+		parameters:""
+		detailed:false
+		connection:"githubgist"
+		content-type:"application/vnd.github+json"
+	];
+	// info gist;
+	name = gist.get("files");
+	// info name.keys();
+	nameoffile = name.keys().get(0);
+	filename = name.keys().get(0);
+	filename = name.get(filename);
+	// info filename;
+	fname = name.keys();
+	info fname;
+	desc = gist.get("description");
+	info desc;
+	content = filename.get("content");
+	info content;
+	public = gist.get("public");
+	info public;
+	return {"type":"form","title":"Github Gist","name":"githubgist","hint":"Update the gist","button_label":"Update","inputs":{{"name":"gistdescription","label":"Gist Description","placeholder":"your gist description","min_length":"0","max_length":"500","mandatory":true,"type":"textarea","value":desc},{"name":"public","label":"Public","value":false,"type":"toggle","value":public},{"label":"Attach Updated Gist","name":"file","placeholder":"Attach your Updated Gist File To Make Updates on your gists","mandatory":true,"type":"file"},{"name":"hidden","value":gid,"type":"hidden"}},"action":{"type":"invoke.function","name":"toupdate"}};
+}
+catch (e)
+{
+	return {"text":e};
+}
+// {"name":"fileexe","label":"Filename including Extension","placeholder":"your gist filename","min_length":"0","max_length":"100","mandatory":true,"value":nameoffile,"type":"text"},{"name":"gistcode","label":"Gist Codes","placeholder":"your gist gist code","min_length":"0","max_length":"5000","mandatory":true,"type":"textarea","value":content}
+return {};

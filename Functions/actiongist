@@ -1,0 +1,108 @@
+
+response = Map();
+info form;
+formValues = form.get("values");
+hidden = formValues.get("hidden");
+info hidden;
+if(hidden.equalsIgnoreCase("codegist"))
+{
+	// info messages;
+	// info message;
+	messlist = messages.get("list");
+	formValues = form.get("values");
+	description = formValues.get("description");
+	info description;
+	public = formValues.get("public");
+	info public;
+	filename = formValues.get("fileexe");
+	info filename;
+	info formValues;
+	// info message;
+	tot = " ";
+	for each  msg in messlist
+	{
+		tot = tot + msg.get("text") + "\n";
+	}
+	contentgist = tot;
+	info contentgist;
+	// info messages;
+	// info message;
+	header = Map();
+	filedetails = Map();
+	content = Map();
+	content.put("content",contentgist);
+	filedetails.put(filename,content);
+	header.put("description",description);
+	header.put("public",public);
+	header.put("files",filedetails);
+	info header;
+	actiongist = invokeurl
+	[
+		url :"https://api.github.com/gists"
+		type :POST
+		parameters:header + ""
+		detailed:false
+		connection:"githubgist"
+		content-type:"application/vnd.github+json"
+	];
+	info actiongist;
+	id = actiongist.get("id");
+	// info id;
+	if(id != null)
+	{
+		response.put("type","banner");
+		response.put("text","Gist created successfully !");
+	}
+	else
+	{
+		response.put("type","banner");
+		response.put("text","Error while creating gists, please try again later !");
+	}
+}
+else if(hidden.equalsIgnoreCase("filegist"))
+{
+	// info messages;
+	// info message;
+	formValues = form.get("values");
+	description = formValues.get("description");
+	public = formValues.get("public");
+	contentgist = message.get("file");
+	info message;
+	info messages;
+	info contentgist;
+	filename = contentgist.getfilename();
+	contentgist = contentgist.getfilecontent();
+	// info contentgist;
+	header = Map();
+	filedetails = Map();
+	content = Map();
+	content.put("content",contentgist);
+	filedetails.put(filename,content);
+	header.put("description",description);
+	header.put("public",public);
+	header.put("files",filedetails);
+	// info header;
+	actiongistfile = invokeurl
+	[
+		url :"https://api.github.com/gists"
+		type :POST
+		parameters:header + ""
+		detailed:false
+		connection:"githubgist"
+		content-type:"application/vnd.github+json"
+	];
+	info actiongistfile;
+	id = actiongistfile.get("id");
+	// info id;
+	if(id != null)
+	{
+		response.put("type","banner");
+		response.put("text","Gist created successfully !");
+	}
+	else
+	{
+		response.put("type","banner");
+		response.put("text","Error while creating gists, please try again later !");
+	}
+}
+return response;

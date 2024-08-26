@@ -1,0 +1,9 @@
+
+//sample layout button handler
+info target;
+gid = target.get("id");
+info gid;
+tabid = target.get("tab_id");
+info tabid;
+return {"type":"form","title":"Comment","name":"Comment","hint":"Add Your Comment","button_label":"Comment","inputs":{{"label":"Comment","name":"textarea","placeholder":"Add a Comment","min_length":"0","max_length":"500","mandatory":true,"type":"textarea"},{"name":"hidden","value":gid + ".." + tabid,"type":"hidden"}},"action":{"type":"invoke.function","name":"tocomment"}};
+

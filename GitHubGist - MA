@@ -1,0 +1,47 @@
+
+response = Map();
+messageType = message.get("type");
+if(attachments.size() == 0)
+{
+	info messages;
+	info message;
+	// 	lom = messages.get("list");
+	// 	info lom;
+	// 	tot = ",";
+	// 	for each  msg in lom
+	// 	{
+	// 		tot = msg.get("text") + tot;
+	// 	}
+	// 	contentgist = tot;
+	if(messages.get("count") > 1)
+	{
+		response.put("type","banner");
+		response.put("text","Select a Message to create a Gist!");
+	}
+	else
+	{
+		contentgist = message.get("text");
+		info contentgist;
+		return {"type":"form","title":"Github Gists","name":"Gist","hint":"Enter the Details for your Gist","button_label":"Create","inputs":{{"label":"Filename","name":"fileexe","placeholder":"Filename","min_length":"0","max_length":"100","mandatory":true,"type":"text"},{"label":"Gist Description","name":"description","placeholder":"Your gists description","min_length":"0","max_length":"256","mandatory":true,"type":"textarea"},{"label":"Public","name":"public","value":false,"type":"toggle"},{"label":"Attached Gist Code","name":"textarea","placeholder":"Your gist code goes here","value":contentgist,"min_length":"0","max_length":"5000","mandatory":true,"type":"textarea"},{"name":"hidden","value":"codegist","type":"hidden"}},"action":{"type":"invoke.function","name":"actiongist"}};
+	}
+}
+else
+{
+	info attachments;
+	info attachments.size();
+	if(attachments.size() == 1)
+	{
+		filenameshow = attachments.get(0);
+		info filenameshow;
+		return {"type":"form","title":"Github Gists","name":"Gist","hint":"Enter the Deatails for your Gist","button_label":"Create","inputs":{{"label":"Gist Description","name":"description","placeholder":"Your Gists description goes here","min_length":"0","max_length":"256","mandatory":true,"type":"textarea"},{"label":"Public","name":"public","value":false,"type":"toggle"},{"label":"Attached FIle","name":"checkbox","value":"true","max_selections":"1","mandatory":true,"disabled":true,"type":"checkbox","options":{{"value":"true","label":filenameshow}}},{"name":"hidden","value":"filegist","type":"hidden"}},"action":{"type":"invoke.function","name":"actiongist"}};
+	}
+	else
+	{
+		response.put("type","banner");
+		response.put("text","Select a Single File to post as a Gist!");
+	}
+}
+// 	attachedfile = attachments.get(0);
+// 	getcontent = attachedfile.getfilecontent();
+// 	info getcontent.toString();
+return response;

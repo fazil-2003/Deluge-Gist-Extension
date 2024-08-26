@@ -1,0 +1,6 @@
+
+//sample layout button handler
+//return a form to the user to create a gist with the neccessary details:
+return {"type":"form","title":"Github Gist","name":"githubgist","hint":"Create a gist","button_label":"Create","inputs":{{"name":"gistdescription","label":"Gist Description","placeholder":"your gist description","min_length":"0","max_length":"256","mandatory":true,"type":"textarea"},{"name":"public","label":"Public","value":false,"type":"toggle"},{"label":"Gist Type","name":"radio","mandatory":true,"type":"radio","trigger_on_change":true,"options":{{"value":"codegist","label":"Code"},{"value":"filegist","label":"File"}}},{"name":"hidden","value":"widgetcall","type":"hidden"}},"action":{"type":"invoke.function","name":"addgists"}};
+//once entered form on create action points to add gist functions
+//where the api call is being invoked and the gist is created

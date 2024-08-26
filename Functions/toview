@@ -1,0 +1,132 @@
+
+//sample layout button handler
+// info target;
+gistid = target.get("id");
+gist = invokeurl
+[
+	url :"https://api.github.com/gists/" + gistid
+	type :GET
+	parameters:""
+	detailed:false
+	connection:"githubgist"
+	content-type:"application/vnd.github+json"
+];
+tabsArr = {{"label":"Gists - Tab","id":"hometab"},{"label":"Gist - Info","id":"infotab"},{"label":"Gist - Revisions","id":"revtab"}};
+sections = list();
+elements = list();
+gistfiles = gist.get("files");
+gistfilesc = gistfiles.keys();
+name = gistfilesc.get(0);
+content = gistfiles.get(name).get("content");
+size = gistfiles.get(name).get("size");
+desc = gist.get("description");
+// Your code
+elements.add({"type":"text","text":name});
+elements.add({"type":"subtext","text":desc});
+elements.add({"type":"title","text":"Code : "});
+if(size >= 500)
+{
+	elements.add({"type":"text","text":"The gist contains more than 500 characters, please download to view it."});
+}
+else
+{
+	elements.add({"type":"subtext","text":content});
+}
+// comments
+comments = invokeurl
+[
+	url :gist.get("comments_url")
+	type :GET
+	parameters:""
+	connection:"githubgist"
+];
+if(comments == null || comments.size() == 0)
+{
+	elements.add({"type":"title","text":"No comments found"});
+}
+else
+{
+	elements.add({"type":"title","text":"Comments (" + comments.size() + ")"});
+	for each  comment in comments
+	{
+		cname = comment.get("user").get("login");
+		avatar = comment.get("user").get("avatar_url");
+		body = comment.get("body");
+		elements.add({"type":"user_activity","user":{"id":"1234567","name":cname},"text":body});
+	}
+}
+sections.add({"id":2,"elements":elements});
+return {"type":"applet","tabs":tabsArr,"active_tab":"infotab","sections":sections};
+// revision = revview.get("history");
+// info revision;
+// out = revision.toString();
+// for each  i in revision
+// {
+// 	out = out + i + "\n\n\n\n";
+// 	out = out + i.getJSON("url") + "\n\n\n\n";
+// }
+// zoho.cliq.createRecord("a",{"out":out});
+// revurl = revision.get(1);
+// info revurl;
+// revurl = revurl.get("url");
+// info revurl;
+// reveview = invokeurl
+// 		[
+// 			url : revurl
+// 			type :GET
+// 			parameters:""
+// 			detailed:false
+// 			connection:"githubgist"
+// 			content-type:"application/vnd.github+json"
+// 		];
+// 		info reveview;
+// reveview = reveview.get("history");
+// info reveview;
+// reveurl = reveview.get(1);
+// reveurl = reveurl.get("url");
+// // info reveurl;
+// reviview = invokeurl
+// 		[
+// 			url : reveurl
+// 			type :GET
+// 			parameters:""
+// 			detailed:false
+// 			connection:"githubgist"
+// 			content-type:"application/vnd.github+json"
+// 		];
+// 		info reviview;
+// imgUrls = {"https://github.githubassets.com/assets/GitHub-Mark-ea2971cee799.png"};
+// 	header = {"title":"Gist - Home"};
+// 	dataList = list();
+// 	buttonList = {{"label":"View","type":"invoke.function","name":"toview","id":"toView","emotion":"positive"},{"label":"Delete","type":"invoke.function","name":"todelete","id":"todelete","emotion":"negative"}};
+// 	for each  gist in widgetview
+// 	{
+// 		name = gist.get("files");
+// 		name = name.keys().get(0);
+// 		description = gist.get("description");
+// 		url = gist.get("html_url");
+// 		toview = "[" + description + "](" + url + ")";
+// 		eachData = Map();
+// 		eachData.put("title",name);
+// 		eachData.put("description",toview);
+// 		eachData.put("image_url",imgUrls.get(0));
+// 		buttonList = {{"label":"View","type":"invoke.function","name":"toview","id":gist.get("id"),"emotion":"positive"},{"label":"Delete","type":"invoke.function","name":"todelete","id":gist.get("id"),"emotion":"negative"}};
+// 		eachData.put("buttons",buttonList);
+// 		gistlist.add(eachData);
+// 		revview = invokeurl
+// 		[
+// 			url :"https://api.github.com/gists/" + gist.get("id")
+// 			type :GET
+// 			parameters:""
+// 			detailed:false
+// 			connection:"githubgist"
+// 			content-type:"application/vnd.github+json"
+// 		];
+// 		info revview;
+// 	}
+// 	elements = list();
+// 	elements.add({"type":"cards","data":gistlist,"style":{"view":"gallery","size":"medium"}});
+// 	elements.add({"type":"divider"});
+// 	sections.add({"id":1,"elements":elements});
+// 	return {"type":"applet","tabs":tabsArr,"active_tab":id,"sections":sections,"header":header};
+// return Map();

@@ -1,0 +1,281 @@
+
+info user.getJSON("timezone");
+timezone = user.getJSON("timezone");
+email = user.get("email");
+response = Map();
+info target;
+sessionid = target.get("name");
+info sessionid;
+hint = target.get("hint");
+if(sessionid.equalsIgnoreCase("Next") && hint.equalsIgnoreCase("View next Gist"))
+{
+	info arguments;
+	page = arguments.get("key");
+	page = page.toNumber();
+	page = page + 1;
+	commandview = invokeurl
+	[
+		url :"https://api.github.com/gists?per_page=10&page=" + page
+		type :GET
+		parameters:""
+		detailed:false
+		connection:"githubgist"
+		content-type:"application/vnd.github+json"
+	];
+	// info commandview;
+	gistlist = list();
+	for each  gist in commandview
+	{
+		name = gist.get("files");
+		name = name.keys().get(0);
+		if(name.len() > 100)
+		{
+			name = name.subString(0,97) + "...";
+		}
+		description = gist.get("description");
+		info description;
+		if(description.len() == 0)
+		{
+			description = name;
+		}
+		editsize = description.len();
+		if(editsize > 256)
+		{
+			description = description.subString(0,250) + "...";
+			info description;
+		}
+		row = Map();
+		url = gist.get("html_url");
+		id = gist.get("id");
+		toview = "[" + name + "](" + url + ")";
+		row.put("Gist Name",toview);
+		row.put("Gist Description",description);
+		row.put("Add Comments","[Add](invoke.function|slgistComment|" + email + "|" + id + ")");
+		row.put("View Comments","[View](invoke.function|nextviewfunc|" + email + "|" + id + ")");
+		info row;
+		gistlist.add(row);
+	}
+	nextpage = page + 1;
+	allcommandview = invokeurl
+	[
+		url :"https://api.github.com/gists?per_page=10&page=" + nextpage
+		type :GET
+		parameters:""
+		detailed:false
+		connection:"githubgist"
+		content-type:"application/vnd.github+json"
+	];
+	info allcommandview.size();
+	info commandview.size();
+	if(allcommandview.size() > 0)
+	{
+		return {"text":"Unveiling the Gist Symphony! Here(s) your Gists","card":{"theme":"modern-inline"},"slides":{{"type":"table","title":"Gists","buttons":{{"label":"Next","hint":"View next Gist","action":{"type":"invoke.function","data":{"name":"nextviewfunc"}},"key":page}},"data":{"headers":{"Gist Name","Gist Description","Add Comments","View Comments"},"rows":gistlist}}},"navigation":true};
+	}
+	else if(commandview.size() <= 10)
+	{
+		return {"text":"Unveiling the Gist Symphony! Here(s) your Gists","card":{"theme":"modern-inline"},"slides":{{"type":"table","title":"Gists","data":{"headers":{"Gist Name","Gist Description","Add Comments","View Comments"},"rows":gistlist}}},"navigation":true};
+	}
+}
+else if(sessionid.equalsIgnoreCase("View") && hint.equalsIgnoreCase(""))
+{
+	info arguments;
+	gistid = arguments.get("key");
+	info gistid;
+	page = 1;
+	info page;
+	gist = invokeurl
+	[
+		url :"https://api.github.com/gists/" + gistid
+		type :GET
+		parameters:""
+		detailed:false
+		connection:"githubgist"
+		content-type:"application/vnd.github+json"
+	];
+	// 	info gist;
+	allcomments = invokeurl
+	[
+		url :gist.get("comments_url")
+		type :GET
+		parameters:""
+		connection:"githubgist"
+	];
+	// 	info allcomments;
+	comments = invokeurl
+	[
+		url :gist.get("comments_url") + "?per_page=10&page=" + page
+		type :GET
+		parameters:""
+		connection:"githubgist"
+	];
+	info comments;
+	if(comments == null || comments.size() == 0)
+	{
+		return {"text":"Oops,No Comments Found, Add a comment to view!","card":{"theme":"modern-inline"},"buttons":{{"label":"Add","hint":"Add a Comment","action":{"type":"invoke.function","data":{"name":"slgistComment"}},"key":gistid}}};
+	}
+	else
+	{
+		elements = list();
+		for each  comment in comments
+		{
+			cname = comment.get("user").get("login");
+			if(cname.len() > 100)
+			{
+				cname = cname.subString(0,97) + "...";
+			}
+			avatar = comment.get("user").get("avatar_url");
+			body = comment.get("body");
+			if(body.contains("!") && body.contains("[") && body.contains("]") && body.contains("(") && body.contains(")"))
+			{
+				a1 = body.indexOf("[");
+				info a1;
+				a2 = body.indexOf("]");
+				info a2;
+				u1 = body.indexOf("(");
+				info u1;
+				u2 = body.indexOf(")");
+				info u2;
+				body = body.subString(a1,u1) + body.subString(u1,u2 + 1);
+				info body;
+			}
+			if(body.len() > 256)
+			{
+				body = body.subString(0,250) + "...";
+			}
+			commit = comment.get("updated_at");
+			committed = commit.subString(0,4) + "-" + commit.subString(5,7) + "-" + commit.subString(8,10) + " " + commit.substring(11,19);
+			//  committedes = commit.subString(0,4) + "-" + commit.subString(5,7) + "-" + commit.subString(8,10);
+			// 	info committed;
+			actdt = committed.unixEpoch("Europe/London");
+			mon = toDateTimeString(actdt,"yyyy-MMM-dd",timezone);
+			dates = mon.subString(9,11) + "-" + mon.subString(5,8) + "-" + mon.subString(0,4);
+			hh = toDateTimeString(actdt,"HH",timezone);
+			ampm = "AM";
+			if(hh.toNumber() > 12)
+			{
+				ampm = "PM";
+				hh = hh.toNumber() % 12;
+				hh = hh.toString();
+			}
+			else if(hh.toNumber() == 12)
+			{
+				ampm = "PM";
+			}
+			tim = toDateTimeString(actdt,"mm:ss",timezone);
+			actdatetime = dates + " " + hh + ":" + tim + " " + ampm;
+			elements.add({"type":"text","title":cname,"data":"Commented at: " + actdatetime + "\n" + body});
+		}
+		nextpage = page + 1;
+		nextcomments = invokeurl
+		[
+			url :gist.get("comments_url") + "?per_page=10&page=" + nextpage
+			type :GET
+			parameters:""
+			connection:"githubgist"
+		];
+		info nextcomments.size();
+		if(nextcomments.size() > 0)
+		{
+			// 			buttons.add({"label":"Next","type":"invoke.function","name":"nextviewfunc","id":page + ".." + gistid});
+			return {"text":"Here(s) you Gist Comments !","card":{"theme":"modern-inline"},"slides":elements,"buttons":{{"label":"Next","hint":"Next Comments Page","action":{"type":"invoke.function","data":{"name":"nextviewfunc"}},"key":page + ".." + gistid}},"navigation":true};
+		}
+		return {"text":"Here(s) you Gist Comments !","card":{"theme":"modern-inline"},"slides":elements,"navigation":true};
+	}
+}
+else if(sessionid.equalsIgnoreCase("Next") && hint.equalsIgnoreCase("Next Comments Page"))
+{
+	info arguments;
+	ids = arguments.get("key");
+	ids = ids.toList("..");
+	page = ids.get(0).toNumber();
+	info page;
+	gistid = ids.get(1);
+	info gistid;
+	gist = invokeurl
+	[
+		url :"https://api.github.com/gists/" + gistid
+		type :GET
+		parameters:""
+		detailed:false
+		connection:"githubgist"
+		content-type:"application/vnd.github+json"
+	];
+	page = page + 1;
+	comments = invokeurl
+	[
+		url :gist.get("comments_url") + "?per_page=10&page=" + page
+		type :GET
+		parameters:""
+		connection:"githubgist"
+	];
+	// 	info comments;
+	elements = list();
+	for each  comment in comments
+	{
+		cname = comment.get("user").get("login");
+		info cname;
+		if(cname.len() > 100)
+		{
+			cname = cname.subString(0,97) + "...";
+		}
+		body = comment.get("body");
+		info body;
+		if(body.contains("!") && body.contains("[") && body.contains("]") && body.contains("(") && body.contains(")"))
+		{
+			a1 = body.indexOf("[");
+			info a1;
+			a2 = body.indexOf("]");
+			info a2;
+			u1 = body.indexOf("(");
+			info u1;
+			u2 = body.indexOf(")");
+			info u2;
+			body = body.subString(a1,u1) + body.subString(u1,u2 + 1);
+			info body;
+		}
+		if(body.len() > 200)
+		{
+			body = body.subString(0,200) + "...";
+		}
+		info body;
+		commit = comment.get("updated_at");
+		committed = commit.subString(0,4) + "-" + commit.subString(5,7) + "-" + commit.subString(8,10) + " " + commit.substring(11,19);
+		//  committedes = commit.subString(0,4) + "-" + commit.subString(5,7) + "-" + commit.subString(8,10);
+		// 	info committed;
+		actdt = committed.unixEpoch("Europe/London");
+		mon = toDateTimeString(actdt,"yyyy-MMM-dd",timezone);
+		dates = mon.subString(9,11) + "-" + mon.subString(5,8) + "-" + mon.subString(0,4);
+		hh = toDateTimeString(actdt,"HH",timezone);
+		ampm = "AM";
+		if(hh.toNumber() > 12)
+		{
+			ampm = "PM";
+			hh = hh.toNumber() % 12;
+			hh = hh.toString();
+		}
+		else if(hh.toNumber() == 12)
+		{
+			ampm = "PM";
+		}
+		tim = toDateTimeString(actdt,"mm:ss",timezone);
+		actdatetime = dates + " " + hh + ":" + tim + " " + ampm;
+		elements.add({"type":"text","title":cname,"data":"Commented at: " + actdatetime + "\n" + body});
+		info elements;
+	}
+	nextpage = page + 1;
+	nextcomments = invokeurl
+	[
+		url :gist.get("comments_url") + "?per_page=10&page=" + nextpage
+		type :GET
+		parameters:""
+		connection:"githubgist"
+	];
+	info nextcomments.size();
+	if(nextcomments.size() > 0)
+	{
+		// 			buttons.add({"label":"Next","type":"invoke.function","name":"nextviewfunc","id":page + ".." + gistid});
+		return {"text":"Here(s) you Gist Comments !","card":{"theme":"modern-inline"},"slides":elements,"buttons":{{"label":"Next","hint":"Next Comments Page","action":{"type":"invoke.function","data":{"name":"nextviewfunc"}},"key":page + ".." + gistid}},"navigation":true};
+	}
+	return {"text":"Here(s) you Gist Comments !","card":{"theme":"modern-inline"},"slides":elements,"navigation":true};
+}
+return Map();

@@ -1,0 +1,307 @@
+
+//sample layout button handler
+info user.get("id");
+info target;
+info arguments;
+tabid = target.get("tab_id");
+ids = target.get("id").toList("..");
+gid = ids.get(0);
+page = ids.get(1);
+secid = target.get("section_id");
+// widgetview = invokeurl
+// [
+// 	url :"https://api.github.com/gists?per_page=10&page=1"
+// 	type :GET
+// 	parameters:""
+// 	detailed:false
+// 	connection:"githubgist"
+// 	content-type:"application/vnd.github+json"
+// ];
+// // info widgetview;
+// if(widgetview.size() > 0)
+// {
+// 	searchview = invokeurl
+// 	[
+// 		url :"https://api.github.com/gists?per_page=1&page=1"
+// 		type :GET
+// 		parameters:""
+// 		detailed:false
+// 		connection:"githubgist"
+// 		content-type:"application/vnd.github+json"
+// 	];
+// 	// info searchview;
+// 	Adminlogin = searchview;
+// 	Adminlogin = Adminlogin.get(0).get("owner");
+// 	// 	info Adminlogin;
+// 	Adminuser = Adminlogin.get("login");
+// 	// 	info Adminuser;
+// }
+userdetails = invokeurl
+[
+	url :"https://api.github.com/user"
+	type :GET
+	parameters:""
+	detailed:false
+	connection:"githubgist"
+	content-type:"application/vnd.github+json"
+];
+info userdetails;
+Adminuser = userdetails.get("login");
+if(tabid.equalsIgnoreCase("hometab"))
+{
+	info tabid;
+	sections = list();
+	tag = target.get("label");
+	gist = invokeurl
+	[
+		url :"https://api.github.com/gists/" + gid
+		type :GET
+		parameters:""
+		detailed:false
+		connection:"githubgist"
+		content-type:"application/vnd.github+json"
+	];
+	info gist;
+	name = gist.get("files");
+	name = name.keys().get(0);
+	if(name.len() > 100)
+	{
+		name = name.subString(0,97) + "...";
+	}
+	desc = gist.get("description");
+	if(desc == null)
+	{
+		desc = name;
+	}
+	if(desc.len() > 256)
+	{
+		desc = desc.subString(0,250);
+	}
+	url = gist.get("html_url");
+	toview = "[" + name + "](" + url + ")";
+	currRev = gist.get("history").get(0).get("version");
+	if(tag.equalsIgnoreCase("Star"))
+	{
+		stargist = invokeurl
+		[
+			url :"https://api.github.com/gists/" + gid + "/star"
+			type :PUT
+			parameters:""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		info stargist;
+		// To get record with the record id 
+		query_map = Map();
+		criteria_string = "gistid==" + gid + "&&" + "zuid==" + user.get("id");
+		// criteria_string="hello";
+		query_map.put("criteria",criteria_string);
+		response_map = zoho.cliq.getRecords("fav",query_map);
+		if(response_map.get("status").equalsIgnoreCase("SUCCESS") && response_map.get("list").size() > 0)
+		{
+			info "response = " + response_map;
+			info "stared";
+			return Map();
+		}
+		else
+		{
+			info "response = " + response_map;
+			info "not stared";
+			record = Map();
+			record.put("zuid",user.get("id"));
+			record.put("gistid",gid);
+			info zoho.cliq.createRecord("fav",record);
+			// return Map();
+		}
+		dataList = list();
+		dataList.add({"type":"text","text":toview});
+		dataList.add({"type":"subtext","text":desc});
+		page = ids.get(1);
+		dataList.add({"type":"buttons","buttons":{{"label":"Unstar","type":"invoke.function","name":"tostar","id":gist.get("id") + ".." + page,"emotion":"positive"},{"label":"Revisions","type":"invoke.function","name":"torev","id":gist.get("id"),"emotion":"positive"},{"label":"Comments","type":"invoke.function","name":"getcomments","id":gist.get("id"),"emotion":"positive"},{"label":"Download","type":"open.url","url":gist.get("html_url") + "/archive/" + currRev + ".zip","emotion":"positive"},{"label":"Delete","type":"invoke.function","name":"todelete","id":gist.get("id") + ".." + name,"emotion":"negative"}}});
+		dataList.add({"type":"divider"});
+		return {"type":"section","elements":dataList,"status":{"text":"Gist starred","type":"success"}};
+	}
+	else if(tag.equalsIgnoreCase("Unstar"))
+	{
+		stargist = invokeurl
+		[
+			url :"https://api.github.com/gists/" + gid + "/star"
+			type :DELETE
+			parameters:""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		info stargist;
+		zoho.cliq.deleteRecords("fav","zuid==" + user.get("id") + "&&" + "gistid==" + gid);
+		dataList = list();
+		dataList.add({"type":"text","text":toview});
+		dataList.add({"type":"subtext","text":desc});
+		page = ids.get(1);
+		info page;
+		dataList.add({"type":"buttons","buttons":{{"label":"Star","type":"invoke.function","name":"tostar","id":gist.get("id") + ".." + page,"emotion":"positive"},{"label":"Revisions","type":"invoke.function","name":"torev","id":gist.get("id"),"emotion":"positive"},{"label":"Comments","type":"invoke.function","name":"getcomments","id":gist.get("id"),"emotion":"positive"},{"label":"Download","type":"open.url","url":gist.get("html_url") + "/archive/" + currRev + ".zip","emotion":"positive"},{"label":"Delete","type":"invoke.function","name":"todelete","id":gist.get("id") + ".." + name,"emotion":"negative"}}});
+		dataList.add({"type":"divider"});
+		return {"type":"section","elements":dataList,"status":{"text":"Gist unstarred","type":"success"}};
+	}
+}
+else if(tabid.equalsIgnoreCase("alltab"))
+{
+	info tabid;
+	tag = target.get("label");
+	gist = invokeurl
+	[
+		url :"https://api.github.com/gists/" + gid
+		type :GET
+		parameters:""
+		detailed:false
+		connection:"githubgist"
+		content-type:"application/vnd.github+json"
+	];
+	// 	info gist;
+	name = gist.get("files");
+	name = name.keys().get(0);
+	if(name.len() > 100)
+	{
+		name = name.subString(0,97) + "...";
+	}
+	info name;
+	desc = gist.get("description");
+	if(desc == null)
+	{
+		desc = name;
+	}
+	info desc;
+	if(desc.len() > 256)
+	{
+		desc = desc.subString(0,250);
+	}
+	info desc;
+	url = gist.get("html_url");
+	info url;
+	toview = "[" + name + "](" + url + ")";
+	info toview;
+	currRev = gist.get("history").get(0).get("version");
+	info currRev;
+	gistuser = gist.get("owner");
+	guser = gistuser.get("login");
+	if(tag.equalsIgnoreCase("Star"))
+	{
+		stargist = invokeurl
+		[
+			url :"https://api.github.com/gists/" + gid + "/star"
+			type :PUT
+			parameters:""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		info stargist;
+		query_map = Map();
+		criteria_string = "gistid==" + gid + "&&" + "zuid==" + user.get("id");
+		// criteria_string="hello";
+		query_map.put("criteria",criteria_string);
+		response_map = zoho.cliq.getRecords("fav",query_map);
+		if(response_map.get("status").equalsIgnoreCase("SUCCESS") && response_map.get("list").size() > 0)
+		{
+			info "response = " + response_map;
+			info "stared";
+			return Map();
+		}
+		else
+		{
+			info "response = " + response_map;
+			info "not stared";
+			record = Map();
+			record.put("zuid",user.get("id"));
+			record.put("gistid",gid);
+			info zoho.cliq.createRecord("fav",record);
+			// return Map();
+		}
+		dataList = list();
+		dataList.add({"type":"text","text":toview});
+		dataList.add({"type":"subtext","text":desc});
+		page = ids.get(1);
+		if(guser == Adminuser)
+		{
+			dataList.add({"type":"buttons","buttons":{{"label":"Unstar","type":"invoke.function","name":"tostar","id":gist.get("id") + ".." + page,"emotion":"positive"},{"label":"Revisions","type":"invoke.function","name":"torev","id":gist.get("id"),"emotion":"positive"},{"label":"Comments","type":"invoke.function","name":"getcomments","id":gist.get("id"),"emotion":"positive"},{"label":"Download","type":"open.url","url":gist.get("html_url") + "/archive/" + currRev + ".zip","emotion":"positive"},{"label":"Delete","type":"invoke.function","name":"todelete","id":gist.get("id") + ".." + name,"emotion":"negative"}}});
+		}
+		else
+		{
+			dataList.add({"type":"buttons","buttons":{{"label":"Unstar","type":"invoke.function","name":"tostar","id":gist.get("id") + ".." + page,"emotion":"positive"},{"label":"Revisions","type":"invoke.function","name":"torev","id":gist.get("id"),"emotion":"positive"},{"label":"Comments","type":"invoke.function","name":"getcomments","id":gist.get("id"),"emotion":"positive"},{"label":"Download","type":"open.url","url":gist.get("html_url") + "/archive/" + currRev + ".zip","emotion":"positive"}}});
+		}
+		dataList.add({"type":"divider"});
+		info dataList;
+		return {"type":"section","elements":dataList,"status":{"text":"Gist starred","type":"success"}};
+	}
+	else if(tag.equalsIgnoreCase("Unstar"))
+	{
+		stargist = invokeurl
+		[
+			url :"https://api.github.com/gists/" + gid + "/star"
+			type :DELETE
+			parameters:""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		info stargist;
+		zoho.cliq.deleteRecords("fav","zuid==" + user.get("id") + "&&" + "gistid==" + gid);
+		dataList = list();
+		dataList.add({"type":"text","text":toview});
+		dataList.add({"type":"subtext","text":desc});
+		page = ids.get(1);
+		if(guser == Adminuser)
+		{
+			dataList.add({"type":"buttons","buttons":{{"label":"Star","type":"invoke.function","name":"tostar","id":gist.get("id") + ".." + page,"emotion":"positive"},{"label":"Revisions","type":"invoke.function","name":"torev","id":gist.get("id"),"emotion":"positive"},{"label":"Comments","type":"invoke.function","name":"getcomments","id":gist.get("id"),"emotion":"positive"},{"label":"Download","type":"open.url","url":gist.get("html_url") + "/archive/" + currRev + ".zip","emotion":"positive"},{"label":"Delete","type":"invoke.function","name":"todelete","id":gist.get("id") + ".." + name,"emotion":"negative"}}});
+		}
+		else
+		{
+			dataList.add({"type":"buttons","buttons":{{"label":"Star","type":"invoke.function","name":"tostar","id":gist.get("id") + ".." + page,"emotion":"positive"},{"label":"Revisions","type":"invoke.function","name":"torev","id":gist.get("id"),"emotion":"positive"},{"label":"Comments","type":"invoke.function","name":"getcomments","id":gist.get("id"),"emotion":"positive"},{"label":"Download","type":"open.url","url":gist.get("html_url") + "/archive/" + currRev + ".zip","emotion":"positive"}}});
+		}
+		dataList.add({"type":"divider"});
+		info dataList;
+		return {"type":"section","elements":dataList,"status":{"text":"Gist unstarred","type":"success"}};
+	}
+}
+else if(tabid.equalsIgnoreCase("startab"))
+{
+	info tabid;
+	tag = target.get("label");
+	gist = invokeurl
+	[
+		url :"https://api.github.com/gists/" + gid
+		type :GET
+		parameters:""
+		detailed:false
+		connection:"githubgist"
+		content-type:"application/vnd.github+json"
+	];
+	info gist;
+	name = gist.get("files");
+	name = name.keys().get(0);
+	if(name.len() > 100)
+	{
+		name = name.subString(0,97) + "...";
+	}
+	gistpostname = name.subString(0,name.len());
+	if(tag.equalsIgnoreCase("Unstar"))
+	{
+		stargist = invokeurl
+		[
+			url :"https://api.github.com/gists/" + gid + "/star"
+			type :DELETE
+			parameters:""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		info stargist;
+		zoho.cliq.deleteRecords("fav","zuid==" + user.get("id") + "&&" + "gistid==" + gid);
+		elements = list();
+		elements.add({"type":"text","text":"  " + gistpostname + " Gist Unstarred Successfully"});
+		elements.add({"type":"divider"});
+		return {"type":"section","elements":elements,"status":{"text":"Unstarred Successfully","type":"success"}};
+	}
+}
+return Map();

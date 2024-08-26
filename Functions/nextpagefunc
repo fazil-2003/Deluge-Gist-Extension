@@ -1,0 +1,369 @@
+
+info target;
+tabid = target.get("tab_id");
+info tabid;
+tabsList = {{"label":"Gists - Home","id":"hometab"},{"label":"Starred - Gists","id":"startab"},{"label":"All - Gists","id":"alltab"}};
+ids = target.get("id");
+userdetails = invokeurl
+[
+	url :"https://api.github.com/user"
+	type :GET
+	parameters:""
+	detailed:false
+	connection:"githubgist"
+	content-type:"application/vnd.github+json"
+];
+info userdetails;
+Adminuser = userdetails.get("login");
+if(tabid.equalsIgnoreCase("hometab"))
+{
+	header = Map();
+	footer = Map();
+	sections = list();
+	page = target.getJSON("id").toNumber();
+	page = page + 1;
+	header = {"title":"Page" + page,"navigation":"continue","buttons":{{"label":"Search","type":"invoke.function","name":"tosearch","id":"hometab"},{"label":"Create","type":"invoke.function","name":"Creategist","id":"section"}}};
+	viewnext = invokeurl
+	[
+		url :"https://api.github.com/gists?per_page=10&page=" + page
+		type :GET
+		parameters:""
+		detailed:false
+		connection:"githubgist"
+		content-type:"application/vnd.github+json"
+	];
+	// 	info viewnext;
+	i = page;
+	gistWidgetButtons = list();
+	for each  g in viewnext
+	{
+		if(i > page + 10)
+		{
+			break;
+		}
+		gist = invokeurl
+		[
+			url :"https://api.github.com/gists/" + g.get("id")
+			type :GET
+			parameters:""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		// 		info gist;
+		// 		info g;
+		name = gist.get("files");
+		name = name.keys().get(0);
+		if(name.len() > 100)
+		{
+			name = name.subString(0,97) + "...";
+		}
+		userdev = gist.get("owner");
+		userlogin = userdev.get("login");
+		// 		info userlogin;
+		infourl = "https://gist.github.com/" + userlogin;
+		touser = "[" + userlogin + "](" + infourl + ")";
+		desc = gist.get("description");
+		gid = gist.get("id");
+		// 		//////////////////////////////////////////////////////////////////////
+		query_map = Map();
+		criteria_string = "gistid==" + gid;
+		query_map.put("criteria",criteria_string);
+		response_map = zoho.cliq.getRecords("fav",query_map);
+		starred = false;
+		mlist = response_map.get("list");
+		info mlist;
+		for each  x in mlist
+		{
+			info x;
+			info x.get("zuid");
+			info user;
+			if(x.get("zuid").equals(user.get("id")))
+			{
+				starred = true;
+			}
+		}
+		info query_map;
+		info starred;
+		//////////////////////////////////////////////////////////////////////
+		if(desc == null)
+		{
+			desc = name;
+		}
+		if(desc.len() > 256)
+		{
+			desc = desc.subString(0,250) + "...";
+		}
+		url = gist.get("html_url");
+		toview = "[" + name + "](" + url + ")";
+		currRev = gist.get("history").get(0).get("version");
+		dataList = list();
+		dataList.add({"type":"text","text":toview});
+		dataList.add({"type":"subtext","text":desc});
+		if(starred)
+		{
+			dataList.add({"type":"buttons","buttons":{{"label":"Unstar","type":"invoke.function","name":"tostar","id":gist.get("id") + ".." + page,"emotion":"positive"},{"label":"Revisions","type":"invoke.function","name":"torev","id":gist.get("id"),"emotion":"positive"},{"label":"Comments","type":"invoke.function","name":"getcomments","id":gist.get("id"),"emotion":"positive"},{"label":"Download","type":"open.url","url":gist.get("html_url") + "/archive/" + currRev + ".zip","emotion":"positive"},{"label":"Delete","type":"invoke.function","name":"todelete","id":gist.get("id") + ".." + name,"emotion":"negative"}}});
+		}
+		else
+		{
+			dataList.add({"type":"buttons","buttons":{{"label":"Star","type":"invoke.function","name":"tostar","id":gist.get("id") + ".." + page,"emotion":"positive"},{"label":"Revisions","type":"invoke.function","name":"torev","id":gist.get("id"),"emotion":"positive"},{"label":"Comments","type":"invoke.function","name":"getcomments","id":gist.get("id"),"emotion":"positive"},{"label":"Download","type":"open.url","url":gist.get("html_url") + "/archive/" + currRev + ".zip","emotion":"positive"},{"label":"Delete","type":"invoke.function","name":"todelete","id":gist.get("id") + ".." + name,"emotion":"negative"}}});
+		}
+		dataList.add({"type":"divider"});
+		sections.add({"id":i,"elements":dataList});
+		i = i + 1;
+	}
+	// 	info page;
+	nextpage = page + 1;
+	allviewnext = invokeurl
+	[
+		url :"https://api.github.com/gists?per_page=10&page=" + nextpage
+		type :GET
+		parameters:""
+		detailed:false
+		connection:"githubgist"
+		content-type:"application/vnd.github+json"
+	];
+	info allviewnext.size();
+	if(allviewnext.size() > 0)
+	{
+		buttons = List();
+		buttons.add({"label":"Next","type":"invoke.function","name":"nextpagefunc","id":page});
+		footer = {"text":"","buttons":buttons};
+	}
+	return {"type":"applet","tabs":tabsList,"active_tab":tabid,"sections":sections,"header":header,"footer":footer};
+}
+else if(tabid.equalsIgnoreCase("alltab"))
+{
+	header = Map();
+	footer = Map();
+	sections = list();
+	page = target.getJSON("id").toNumber();
+	info page;
+	page = page + 1;
+	header = {"title":"Page" + page,"navigation":"continue","buttons":{{"label":"Search","type":"invoke.function","name":"tosearch","id":"alltab"}}};
+	allviewnext = invokeurl
+	[
+		url :"https://api.github.com/gists/public?per_page=10&page=" + page
+		type :GET
+		parameters:""
+		detailed:false
+		connection:"githubgist"
+		content-type:"application/vnd.github+json"
+	];
+	// 	info allviewnext;
+	i = page;
+	gistWidgetButtons = list();
+	for each  g in allviewnext
+	{
+		if(i > page + 10)
+		{
+			break;
+		}
+		gist = invokeurl
+		[
+			url :"https://api.github.com/gists/" + g.get("id")
+			type :GET
+			parameters:""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		// 		info gist;
+		// 		info g;
+		name = gist.get("files");
+		name = name.keys().get(0);
+		if(name.len() > 100)
+		{
+			name = name.subString(0,97) + "...";
+		}
+		userdev = gist.get("owner");
+		alluserlogin = userdev.get("login");
+		// 		info userlogin;
+		infourl = "https://gist.github.com/" + userlogin;
+		touser = "[" + userlogin + "](" + infourl + ")";
+		desc = gist.get("description");
+		if(desc == null)
+		{
+			desc = name;
+		}
+		if(desc.len() > 256)
+		{
+			desc = desc.subString(0,250) + "...";
+		}
+		gid = gist.get("id");
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		query_map = Map();
+		criteria_string = "gistid==" + gid;
+		query_map.put("criteria",criteria_string);
+		response_map = zoho.cliq.getRecords("fav",query_map);
+		starred = false;
+		mlist = response_map.get("list");
+		info mlist;
+		for each  x in mlist
+		{
+			info x;
+			info x.get("zuid");
+			info user;
+			if(x.get("zuid").equals(user.get("id")))
+			{
+				starred = true;
+			}
+		}
+		info query_map;
+		info starred;
+		////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+		url = gist.get("html_url");
+		toview = "[" + name + "](" + url + ")";
+		currRev = gist.get("history").get(0).get("version");
+		dataList = list();
+		dataList.add({"type":"text","text":toview});
+		dataList.add({"type":"subtext","text":desc});
+		if(alluserlogin == Adminuser)
+		{
+			if(starred)
+			{
+				dataList.add({"type":"buttons","buttons":{{"label":"Unstar","type":"invoke.function","name":"tostar","id":gist.get("id") + ".." + page,"emotion":"positive"},{"label":"Revisions","type":"invoke.function","name":"torev","id":gist.get("id"),"emotion":"positive"},{"label":"Comments","type":"invoke.function","name":"getcomments","id":gist.get("id"),"emotion":"positive"},{"label":"Download","type":"open.url","url":gist.get("html_url") + "/archive/" + currRev + ".zip","emotion":"positive"},{"label":"Delete","type":"invoke.function","name":"todelete","id":gist.get("id") + ".." + name,"emotion":"negative"}}});
+			}
+			else
+			{
+				dataList.add({"type":"buttons","buttons":{{"label":"Star","type":"invoke.function","name":"tostar","id":gist.get("id") + ".." + page,"emotion":"positive"},{"label":"Revisions","type":"invoke.function","name":"torev","id":gist.get("id"),"emotion":"positive"},{"label":"Comments","type":"invoke.function","name":"getcomments","id":gist.get("id"),"emotion":"positive"},{"label":"Download","type":"open.url","url":gist.get("html_url") + "/archive/" + currRev + ".zip","emotion":"positive"},{"label":"Delete","type":"invoke.function","name":"todelete","id":gist.get("id") + ".." + name,"emotion":"negative"}}});
+			}
+		}
+		else
+		{
+			if(starred)
+			{
+				dataList.add({"type":"buttons","buttons":{{"label":"Unstar","type":"invoke.function","name":"tostar","id":gist.get("id") + ".." + page,"emotion":"positive"},{"label":"Revisions","type":"invoke.function","name":"torev","id":gist.get("id"),"emotion":"positive"},{"label":"Comments","type":"invoke.function","name":"getcomments","id":gist.get("id"),"emotion":"positive"},{"label":"Download","type":"open.url","url":url + "/archive/" + currRev + ".zip","emotion":"positive"}}});
+			}
+			else
+			{
+				dataList.add({"type":"buttons","buttons":{{"label":"Star","type":"invoke.function","name":"tostar","id":gist.get("id") + ".." + page,"emotion":"positive"},{"label":"Revisions","type":"invoke.function","name":"torev","id":gist.get("id"),"emotion":"positive"},{"label":"Comments","type":"invoke.function","name":"getcomments","id":gist.get("id"),"emotion":"positive"},{"label":"Download","type":"open.url","url":url + "/archive/" + currRev + ".zip","emotion":"positive"}}});
+			}
+		}
+		// 		// 		,{"label":"Star","type":"invoke.function","name":"tostar","id":gist.get("id"),"emotion":"positive"}
+		// 		dataList.add({"type":"buttons","buttons":{{"label":"Revisions","type":"invoke.function","name":"torev","id":gist.get("id"),"emotion":"positive"},{"label":"Comments","type":"invoke.function","name":"getcomments","id":gist.get("id"),"emotion":"positive"},{"label":"Download","type":"open.url","url":gist.get("html_url") + "/archive/" + currRev + ".zip","emotion":"positive"}}});
+		dataList.add({"type":"divider"});
+		sections.add({"id":i,"elements":dataList});
+		i = i + 1;
+	}
+	// 	info page;
+	buttons = List();
+	buttons.add({"label":"Next","type":"invoke.function","name":"nextpagefunc","id":page});
+	footer = {"text":"","buttons":buttons};
+	return {"type":"applet","tabs":tabsList,"active_tab":tabid,"sections":sections,"header":header,"footer":footer};
+}
+else if(tabid.equalsIgnoreCase("startab"))
+{
+	header = Map();
+	footer = Map();
+	sections = list();
+	page = target.getJSON("id").toNumber();
+	page = page + 1;
+	header = {"title":"Page" + page,"navigation":"continue","buttons":{{"label":"Search","type":"invoke.function","name":"tosearch","id":"startab"}}};
+	viewnext = invokeurl
+	[
+		url :"https://api.github.com/gists/starred?per_page=10&page=" + page
+		type :GET
+		parameters:""
+		detailed:false
+		connection:"githubgist"
+		content-type:"application/vnd.github+json"
+	];
+	// 	info viewnext;
+	i = page;
+	gistWidgetButtons = list();
+	for each  g in viewnext
+	{
+		if(i > page + 10)
+		{
+			break;
+		}
+		gist = invokeurl
+		[
+			url :"https://api.github.com/gists/" + g.get("id")
+			type :GET
+			parameters:""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		// 		info gist;
+		// 		info g;
+		if(gist.get("history") != null)
+		{
+			name = gist.get("files");
+			name = name.keys().get(0);
+			if(name.len() > 100)
+			{
+				name = name.subString(0,97) + "...";
+			}
+			stuser = gist.get("owner");
+			stuserlogin = stuser.get("login");
+			// 		info userlogin;
+			infourl = "https://gist.github.com/" + userlogin;
+			touser = "[" + userlogin + "](" + infourl + ")";
+			desc = gist.get("description");
+			if(desc == null)
+			{
+				desc = name;
+			}
+			if(desc.len() > 256)
+			{
+				desc = desc.subString(0,250) + "...";
+			}
+			url = gist.get("html_url");
+			toview = "[" + name + "](" + url + ")";
+			currRev = gist.get("history").get(0).get("version");
+			dataList = list();
+			dataList.add({"type":"text","text":toview});
+			dataList.add({"type":"subtext","text":desc});
+			// 		{"label":"Star","type":"invoke.function","name":"tostar","id":gist.get("id"),"emotion":"positive"},
+			// 		,{"label":"Delete","type":"invoke.function","name":"todelete","id":gist.get("id"),"emotion":"negative"}
+			if(stuserlogin == Adminuser)
+			{
+				dataList.add({"type":"buttons","buttons":{{"label":"Unstar","type":"invoke.function","name":"tostar","id":gist.get("id") + ".." + page,"emotion":"positive"},{"label":"Revisions","type":"invoke.function","name":"torev","id":gist.get("id"),"emotion":"positive"},{"label":"Comments","type":"invoke.function","name":"getcomments","id":gist.get("id"),"emotion":"positive"},{"label":"Download","type":"open.url","url":url + "/archive/" + currRev + ".zip","emotion":"positive"},{"label":"Delete","type":"invoke.function","name":"todelete","id":gist.get("id") + ".." + name,"emotion":"negative"}}});
+			}
+			else
+			{
+				dataList.add({"type":"buttons","buttons":{{"label":"Unstar","type":"invoke.function","name":"tostar","id":gist.get("id") + ".." + page,"emotion":"positive"},{"label":"Revisions","type":"invoke.function","name":"torev","id":gist.get("id"),"emotion":"positive"},{"label":"Comments","type":"invoke.function","name":"getcomments","id":gist.get("id"),"emotion":"positive"},{"label":"Download","type":"open.url","url":url + "/archive/" + currRev + ".zip","emotion":"positive"}}});
+			}
+			// 		dataList.add({"type":"buttons","buttons":{{"label":"Revisions","type":"invoke.function","name":"torev","id":gist.get("id"),"emotion":"positive"},{"label":"Comments","type":"invoke.function","name":"getcomments","id":gist.get("id"),"emotion":"positive"},{"label":"Download","type":"open.url","url":gist.get("html_url") + "/archive/" + currRev + ".zip","emotion":"positive"}}});
+			dataList.add({"type":"divider"});
+			sections.add({"id":i,"elements":dataList});
+			i = i + 1;
+		}
+		else
+		{
+			name = "SPAM GIST DELETED OR USER ACCOUNT HAS BEEN BANNED";
+			info name;
+			dataList = list();
+			url = "https://gist.github.com/hcryftyyy43/485889289a6256dfee3ded780b13ab32";
+			dataList.add({"type":"text","text":"[" + name + "](" + url + ")"});
+			dataList.add({"type":"subtext","text":"SPAM GIST"});
+			dataList.add({"type":"buttons","buttons":{{"label":"Unstar","type":"invoke.function","name":"tostar","id":"qwe","emotion":"positive","disabled":true},{"label":"Revisions","type":"invoke.function","name":"torev","id":"qwe","emotion":"positive","disabled":true},{"label":"Comments","type":"invoke.function","name":"getcomments","id":"qwe","emotion":"positive","disabled":true},{"label":"Download","type":"invoke.function","name":"todelete","id":"qwe","emotion":"positive","disabled":true}}});
+			dataList.add({"type":"divider"});
+			sections.add({"id":i,"elements":dataList});
+			i = i + 1;
+		}
+	}
+	// 	info page;
+	nextpage = page + 1;
+	allviewnext = invokeurl
+	[
+		url :"https://api.github.com/gists/starred?per_page=10&page=" + nextpage
+		type :GET
+		parameters:""
+		detailed:false
+		connection:"githubgist"
+		content-type:"application/vnd.github+json"
+	];
+	info allviewnext.size();
+	if(allviewnext.size() > 0)
+	{
+		buttons = List();
+		buttons.add({"label":"Next","type":"invoke.function","name":"nextpagefunc","id":page});
+		footer = {"text":"","buttons":buttons};
+	}
+	return {"type":"applet","tabs":tabsList,"active_tab":tabid,"sections":sections,"header":header,"footer":footer};
+}
+return Map();

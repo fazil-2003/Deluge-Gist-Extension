@@ -1,0 +1,240 @@
+
+//sample layout button handler
+info target;
+tabid = target.get("tab_id");
+secid = target.get("section_id");
+secsize = secid.len();
+info secsize;
+if(tabid.equalsIgnoreCase("hometab"))
+{
+	if(secsize >= 7)
+	{
+		if(secsize == 7)
+		{
+			ids = target.get("id");
+			ids = ids.toList("..");
+			gistid = ids.get(0);
+			info gistid;
+			gistcommentid = target.get("section_id");
+			info gistcommentid;
+			delete = invokeurl
+			[
+				url :"https://api.github.com/gists/" + gistid + "/comments/" + gistcommentid
+				type :DELETE
+				parameters:""
+				detailed:false
+				connection:"githubgist"
+				content-type:"application/vnd.github+json"
+			];
+			elements = list();
+			elements.add({"type":"text","text":"  Gist Comment Deleted Successfully"});
+			elements.add({"type":"divider"});
+			return {"type":"section","elements":elements,"status":{"text":"Deleted Successfully","type":"success"}};
+		}
+		else if(secsize > 7)
+		{
+			sectionid = target.get("section_id");
+			ids = target.get("id");
+			info ids;
+			ids = ids.toList("..");
+			info ids;
+			gistid = ids.get(0);
+			info gistid;
+			name = ids.get(1);
+			delete = invokeurl
+			[
+				url :"https://api.github.com/gists/" + gistid
+				type :DELETE
+				parameters:""
+				detailed:false
+				connection:"githubgist"
+				content-type:"application/vnd.github+json"
+			];
+			elements = list();
+			elements.add({"type":"text","text":"  " + name + " Gist Deleted Successfully"});
+			elements.add({"type":"divider"});
+			return {"type":"section","elements":elements,"status":{"text":"Deleted Successfully","type":"success"}};
+		}
+	}
+	else
+	{
+		sectionid = target.get("section_id");
+		ids = target.get("id");
+		info ids;
+		ids = ids.toList("..");
+		info ids;
+		gistid = ids.get(0);
+		info gistid;
+		name = ids.get(1);
+		delete = invokeurl
+		[
+			url :"https://api.github.com/gists/" + gistid
+			type :DELETE
+			parameters:""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		elements = list();
+		elements.add({"type":"text","text":"  " + name + " Gist Deleted Successfully"});
+		elements.add({"type":"divider"});
+		return {"type":"section","elements":elements,"status":{"text":"Deleted Successfully","type":"success"}};
+	}
+}
+else if(tabid.equalsIgnoreCase("alltab"))
+{
+	info target;
+	info target.get("secid");
+	secid = target.get("section_id");
+	secsize = secid.len();
+	info secsize;
+	if(secsize >= 7)
+	{
+		if(secsize == 7)
+		{
+			gistid = target.get("id");
+			info gistid;
+			gistcommentid = target.get("section_id");
+			info gistcommentid;
+			delete = invokeurl
+			[
+				url :"https://api.github.com/gists/" + gistid + "/comments/" + gistcommentid
+				type :DELETE
+				parameters:""
+				detailed:false
+				connection:"githubgist"
+				content-type:"application/vnd.github+json"
+			];
+			info delete;
+			elements = list();
+			elements.add({"type":"text","text":"  Gist Comment Deleted Successfully"});
+			elements.add({"type":"divider"});
+			return {"type":"section","elements":elements,"status":{"text":"Deleted Successfully","type":"success"}};
+		}
+		else
+		{
+			sectionid = target.get("section_id");
+			ids = target.get("id");
+			info ids;
+			ids = ids.toList("..");
+			info ids;
+			gistid = ids.get(0);
+			info gistid;
+			name = ids.get(1);
+			delete = invokeurl
+			[
+				url :"https://api.github.com/gists/" + gistid
+				type :DELETE
+				parameters:""
+				detailed:false
+				connection:"githubgist"
+				content-type:"application/vnd.github+json"
+			];
+			elements = list();
+			elements.add({"type":"text","text":"  " + name + " Gist Deleted Successfully"});
+			elements.add({"type":"divider"});
+			return {"type":"section","elements":elements,"status":{"text":"Deleted Successfully","type":"success"}};
+		}
+	}
+	else
+	{
+		sectionid = target.get("section_id");
+		ids = target.get("id");
+		info ids;
+		ids = ids.toList("..");
+		info ids;
+		gistid = ids.get(0);
+		info gistid;
+		name = ids.get(1);
+		delete = invokeurl
+		[
+			url :"https://api.github.com/gists/" + gistid
+			type :DELETE
+			parameters:""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		elements = list();
+		elements.add({"type":"text","text":"  " + name + " Gist Deleted Successfully"});
+		elements.add({"type":"divider"});
+		return {"type":"section","elements":elements,"status":{"text":"Deleted Successfully","type":"success"}};
+	}
+}
+if(tabid.equalsIgnoreCase("startab"))
+{
+	if(secsize >= 7)
+	{
+		if(secsize == 7)
+		{
+			ids = target.get("id");
+			ids = ids.toList("..");
+			gistid = ids.get(0);
+			info gistid;
+			gistcommentid = target.get("section_id");
+			info gistcommentid;
+			delete = invokeurl
+			[
+				url :"https://api.github.com/gists/" + gistid + "/comments/" + gistcommentid
+				type :DELETE
+				parameters:""
+				detailed:false
+				connection:"githubgist"
+				content-type:"application/vnd.github+json"
+			];
+			elements = list();
+			elements.add({"type":"text","text":"  Gist Comment Deleted Successfully"});
+			elements.add({"type":"divider"});
+			return {"type":"section","elements":elements,"status":{"text":"Deleted Successfully","type":"success"}};
+		}
+		else if(secsize > 7)
+		{
+			sectionid = target.get("section_id");
+			ids = target.get("id");
+			info ids;
+			ids = ids.toList("..");
+			info ids;
+			gistid = ids.get(0);
+			info gistid;
+			name = ids.get(1);
+			delete = invokeurl
+			[
+				url :"https://api.github.com/gists/" + gistid
+				type :DELETE
+				parameters:""
+				detailed:false
+				connection:"githubgist"
+				content-type:"application/vnd.github+json"
+			];
+			elements = list();
+			elements.add({"type":"text","text":"  " + name + " Gist Deleted Successfully"});
+			elements.add({"type":"divider"});
+			return {"type":"section","elements":elements,"status":{"text":"Deleted Successfully","type":"success"}};
+		}
+	}
+	else
+	{
+		sectionid = target.get("section_id");
+		ids = target.get("id");
+		info ids;
+		ids = ids.toList("..");
+		info ids;
+		gistid = ids.get(0);
+		info gistid;
+		name = ids.get(1);
+		delete = invokeurl
+		[
+			url :"https://api.github.com/gists/" + gistid
+			type :DELETE
+			parameters:""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		elements = list();
+		elements.add({"type":"text","text":"  " + name + " Gist Deleted Successfully"});
+		elements.add({"type":"divider"});
+		return {"type":"section","elements":elements,"status":{"text":"Deleted Successfully","type":"success"}};
+	}
+}
+return Map();

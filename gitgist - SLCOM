@@ -1,0 +1,117 @@
+Suggestion Handler:
+
+
+list = List();
+entry1 = Map();
+entry2 = Map();
+entry3 = Map();
+entry1.put("title","Create");
+entry1.put("description","To Create a New Gist in Github Gist platform");
+entry1.put("imageurl","https://github.com/opengraph.png");
+list.add(entry1);
+entry2.put("title","View");
+entry2.put("description","View all the Other existing Gists");
+entry2.put("imageurl","https://github.com/opengraph.png");
+list.add(entry2);
+return list;
+
+Execution Handler:
+
+
+// info user;
+email = user.get("email");
+// info email;
+userFirstName = user.get("first_name");
+response = Map();
+response.put("text","Hi " + userFirstName + " Go through your Gists :smile:");
+response = Map();
+inputs = list();
+if(selections.size() == 0)
+{
+	return Map();
+}
+title = selections.getJSON("title");
+if(title.equalsIgnoreCase("Create"))
+{
+	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	
+	return {"type":"form","title":"Create","name":"gistform","hint":"Create your Gist","button_label":"Create","inputs":{{"label":"Description","name":"gistdescription","placeholder":"You Gist Description goes here","min_length":"0","max_length":"256","mandatory":true,"type":"textarea"},{"label":"Public","name":"public","value":false,"type":"toggle"},{"label":"Gist Type","name":"radio","mandatory":true,"type":"radio","trigger_on_change":true,"options":{{"value":"codegist","label":"Code"},{"value":"filegist","label":"File"}}},{"name":"hidden","value":"slashcall","type":"hidden"}},"action":{"type":"invoke.function","name":"addgists"}};
+	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 	// 
+	// 	return {"type":"form","title":"Github Gist","name":"githubgist","hint":"Create your Gist! ","button_label":"Create","inputs":{{"name":"fileexe","label":"Filename","placeholder":"your gist filename","min_length":"0","max_length":"100","mandatory":true,"type":"text"},{"name":"gistdescription","label":"Gist Description","placeholder":"your gist description","min_length":"0","max_length":"256","mandatory":true,"type":"textarea"},{"name":"gistcode","label":"Gist codes","placeholder":"Your Gistcode goes here","min_length":"0","max_length":"5000","mandatory":true,"type":"textarea"},{"name":"public","label":"Public","value":false,"type":"toggle"}},"action":{"type":"invoke.function","name":"addgists"}};
+}
+else if(title.equalsIgnoreCase("View"))
+{
+	page = 1;
+	commandview = invokeurl
+	[
+		url :"https://api.github.com/gists?per_page=10&page=" + page
+		type :GET
+		parameters:""
+		detailed:false
+		connection:"githubgist"
+		content-type:"application/vnd.github+json"
+	];
+	// 	info commandview;
+	// 	info commandview.size();
+	gistlist = list();
+	for each  gist in commandview
+	{
+		name = gist.get("files");
+		name = name.keys().get(0);
+		if(name.len() > 100)
+		{
+			name = name.subString(0,95) + "...";
+		}
+		description = gist.get("description");
+		info description;
+		if(description == null)
+		{
+			description = name;
+		}
+		editsize = description.len();
+		if(editsize > 256)
+		{
+			description = description.subString(0,250) + "...";
+			info description;
+		}
+		info description;
+		row = Map();
+		url = gist.get("html_url");
+		id = gist.get("id");
+		toview = "[" + name + "](" + url + ")";
+		row.put("Gist Name",toview);
+		row.put("Gist Description",description);
+		row.put("Add Comments","[Add](invoke.function|slgistComment|" + email + "|" + id + ")");
+		row.put("View Comments","[View](invoke.function|nextviewfunc|" + email + "|" + id + ")");
+		info row;
+		gistlist.add(row);
+	}
+	if(commandview.size() > 0)
+	{
+		nextpage = page + 1;
+		allcommandview = invokeurl
+		[
+			url :"https://api.github.com/gists?per_page=10&page=" + nextpage
+			type :GET
+			parameters:""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		info allcommandview.size();
+		info commandview.size();
+		if(allcommandview.size() > 0)
+		{
+			return {"text":"Unveiling the Gist Symphony! Here(s) your Gists","card":{"theme":"modern-inline"},"slides":{{"type":"table","title":"Gists","buttons":{{"label":"Next","hint":"View next Gist","action":{"type":"invoke.function","data":{"name":"nextviewfunc"}},"key":page}},"data":{"headers":{"Gist Name","Gist Description","Add Comments","View Comments"},"rows":gistlist}}},"navigation":true};
+			// 		,"Add Comments","View Comments"
+		}
+		else if(commandview.size() <= 10)
+		{
+			return {"text":"Unveiling the Gist Symphony! Here(s) your Gists","card":{"theme":"modern-inline"},"slides":{{"type":"table","title":"Gists","data":{"headers":{"Gist Name","Gist Description","Add Comments","View Comments"},"rows":gistlist}}},"navigation":true};
+		}
+	}
+	else
+	{
+		return {"text":"Oops! No Gists found; create one to view","card":{"theme":"modern-inline"},"buttons":{{"label":"Add","hint":"Create A Gist","action":{"type":"invoke.function","data":{"name":"slgistComment"}},"key":"slashcall"}}};
+	}
+}
+return response;

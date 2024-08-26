@@ -1,0 +1,22 @@
+
+//sample layout button handler
+info target;
+gid = target.get("id");
+gcid = target.get("section_id");
+gettoupdate = invokeurl
+[
+	url :"https://api.github.com/gists/" + gid + "/comments/" + gcid
+	type :GET
+	parameters:""
+	detailed:false
+	connection:"githubgist"
+	content-type:"application/vnd.github+json"
+];
+info gettoupdate;
+body = gettoupdate.get("body");
+info body;
+if(body.len() > 500)
+{
+	body = body.substring(0,496) + "...";
+}
+return {"type":"form","title":"Comment","name":"Comment","hint":"Add Your Comment","button_label":"Comment","inputs":{{"label":"Comment","name":"textarea","placeholder":"Add a Comment","min_length":"0","max_length":"500","mandatory":true,"type":"textarea","value":body},{"name":"gid","value":gid,"type":"hidden"},{"name":"gcid","value":gcid,"type":"hidden"}},"action":{"type":"invoke.function","name":"toedit"}};

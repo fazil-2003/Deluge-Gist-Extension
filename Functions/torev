@@ -1,0 +1,335 @@
+
+info user;
+// info user.getJSON("timezone");
+timezone = user.getJSON("timezone");
+page = 1;
+gistid = target.get("id");
+info target;
+tabid = target.get("tab_id");
+info tabid;
+gist = invokeurl
+[
+	url :"https://api.github.com/gists/" + gistid
+	type :GET
+	parameters:""
+	detailed:false
+	connection:"githubgist"
+	content-type:"application/vnd.github+json"
+];
+info gist;
+// i = invokeurl
+// [
+// 	url :"https://api.github.com/gists?per_page=1"
+// 	type :GET
+// 	parameters:""
+// 	detailed:false
+// 	connection:"githubgist"
+// 	content-type:"application/vnd.github+json"
+// ];
+// // info i;
+// Adminuser = gist.get("owner").get("login").toString();
+// info Adminuser;
+// newuser = i.get(0).get("owner").get("login");
+// info newuser;
+// user = Adminuser.equalsIgnoreCase(newuser);
+// info user;
+tabsArr = {{"label":"Gists - Home","id":"hometab"},{"label":"Starred - Gists","id":"startab"},{"label":"All - Gists","id":"alltab"}};
+sections = list();
+elements = list();
+header = Map();
+footer = Map();
+if(tabid.equalsIgnoreCase("hometab"))
+{
+	info page;
+	gistfiles = gist.get("files");
+	gistfilesc = gistfiles.keys();
+	name = gistfilesc.get(0);
+	// 	content = gistfiles.get(name).get("content");
+	// 	size = gistfiles.get(name).get("size");
+	desc = gist.get("description");
+	url = gist.get("html_url");
+	urlrev = url + "/revisions";
+	if(name.len() > 100)
+	{
+		name = name.subString(0,96) + "...";
+	}
+	if(desc == null)
+	{
+		desc = name;
+	}
+	elements.add({"type":"text","text":"Gist : " + "[" + name + "](" + urlrev + ")"});
+	if(desc.len() > 256)
+	{
+		desc = desc.subString(0,250) + "...";
+	}
+	elements.add({"type":"text","text":desc});
+	elements.add({"type":"divider"});
+	gid = gist.get("id");
+	header = {"title":"Gist - Revision","navigation":"continue","buttons":{{"label":"Update","type":"invoke.function","name":"updategist","id":gid}}};
+	// 	buttons = List();
+	// 	buttons.add({"label":"Next","type":"invoke.function","name":"nextpagefunc","id":page + ".." + gid});
+	// 	footer = {"buttons":buttons};
+	history = gist.get("history");
+	rowlist = list();
+	i = 1;
+	elements.add({"type":"text","text":"Revision Details : "});
+	for each  reversion in gist.get("history")
+	{
+		revisionversion = reversion.get("version");
+		gistrevision = invokeurl
+		[
+			url :"https://api.github.com/gists/" + gistid + "/" + revisionversion + "?per_page=30&page=1"
+			type :GET
+			parameters:""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		// 	info gistrevision;
+		urlrev = gistrevision.get("html_url") + "/" + revisionversion;
+		// 	info urlrev;
+		namerev = gistrevision.get("files");
+		namerevision = namerev.keys();
+		nameofrev = namerevision.get(0);
+		userin = reversion.get("user");
+		userlogin = userin.get("login");
+		// 	info userlogin;
+		commit = reversion.get("committed_at");
+		info commit;
+		//2024-02-21 12:00:00
+		committed = commit.subString(0,4) + "-" + commit.subString(5,7) + "-" + commit.subString(8,10) + " " + commit.substring(11,19);
+		//  committedes = commit.subString(0,4) + "-" + commit.subString(5,7) + "-" + commit.subString(8,10);
+		// 	info committed;
+		actdt = committed.unixEpoch("Europe/London");
+		mon = toDateTimeString(actdt,"yyyy-MMM-dd",timezone);
+		dates = mon.subString(9,11) + "-" + mon.subString(5,8) + "-" + mon.subString(0,4);
+		hh = toDateTimeString(actdt,"HH",timezone);
+		ampm = "AM";
+		if(hh.toNumber() > 12)
+		{
+			ampm = "PM";
+			hh = hh.toNumber() % 12;
+			hh = hh.toString();
+		}
+		tim = toDateTimeString(actdt,"mm:ss",timezone);
+		actdatetime = dates + " " + hh + ":" + tim + " " + ampm;
+		//  actdt = committed.unixEpoch("GMT");
+		// actdt = committed.gettime(12,true);
+		// info actdt;
+		// datetime = committedes+" "+actdt;
+		// actdatetime = toDateTimeString(datetime,"dd-MMM-yyyy / HH:mm:ss",timezone);
+		// stringdate = strdate.subString(4,6)+"-"+strdate.subString(0,3)+"-"+strdate.subString(8,12)+" "+strdate.subString(13,21);
+		// actdatetime = stringdate.getDateTime(12,true);
+		// info actdatetime;
+		// 	info actdatetime;
+		change = reversion.get("change_status");
+		changes = change.get("total");
+		if(changes == null)
+		{
+			changes = 1;
+		}
+		if(nameofrev.len() > 100)
+		{
+			nameofrev = nameofrev.subString(0,97) + "...";
+		}
+		row = {"Version Name":nameofrev,"User":userlogin,"Commit time":actdatetime,"Changes":changes};
+		rowlist.add(row);
+	}
+	elements.add({"type":"table","headers":{"Version Name","User","Commit time","Changes"},"rows":rowlist,"style":{"width":{"25","25","25","25"},"text_align":{"center","center","center","center"}}});
+	// 	elements.add({"type":"buttons","buttons":{{"label":"+ Comment","type":"invoke.function","name":"CreategistComment","id":gid,"emotion":"positive"}}});
+	sections.add({"id":1,"elements":elements});
+}
+else if(tabid.equalsIgnoreCase("alltab"))
+{
+	gistfiles = gist.get("files");
+	gistfilesc = gistfiles.keys();
+	name = gistfilesc.get(0);
+	// 	content = gistfiles.get(name).get("content");
+	// 	size = gistfiles.get(name).get("size");
+	desc = gist.get("description");
+	url = gist.get("html_url");
+	urlrev = url + "/revisions";
+	if(name.len() > 100)
+	{
+		name = name.subString(0,96) + "...";
+	}
+	if(desc == null)
+	{
+		desc = name;
+	}
+	elements.add({"type":"text","text":"Gist : " + "[" + name + "](" + urlrev + ")"});
+	if(desc.len() > 256)
+	{
+		desc = desc.subString(0,250) + "...";
+	}
+	elements.add({"type":"text","text":desc});
+	elements.add({"type":"divider"});
+	gid = gist.get("id");
+	header = {"title":"Gist - Revision","navigation":"continue"};
+	// 	buttons = List();
+	// 	buttons.add({"label":"Next","type":"invoke.function","name":"nextpagefunc","id":page + ".." + gid});
+	// 	footer = {"buttons":buttons};
+	history = gist.get("history");
+	rowlist = list();
+	i = 1;
+	elements.add({"type":"text","text":"Revision Details : "});
+	for each  reversion in gist.get("history")
+	{
+		revisionversion = reversion.get("version");
+		gistrevision = invokeurl
+		[
+			url :"https://api.github.com/gists/" + gistid + "/" + revisionversion + "?per_page=30&page=1"
+			type :GET
+			parameters:""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		// 	info gistrevision;
+		urlrev = gistrevision.get("html_url") + "/" + revisionversion;
+		// 	info urlrev;
+		namerev = gistrevision.get("files");
+		namerevision = namerev.keys();
+		nameofrev = namerevision.get(0);
+		userin = reversion.get("user");
+		userlogin = userin.get("login");
+		// 	info userlogin;
+		commit = reversion.get("committed_at");
+		// 	info commit;
+		//2024-02-21 12:00:00
+		committed = commit.subString(0,4) + "-" + commit.subString(5,7) + "-" + commit.subString(8,10) + " " + commit.substring(11,19);
+		//  committedes = commit.subString(0,4) + "-" + commit.subString(5,7) + "-" + commit.subString(8,10);
+		// 	info committed;
+		actdt = committed.unixEpoch("Europe/London");
+		mon = toDateTimeString(actdt,"yyyy-MMM-dd",timezone);
+		dates = mon.subString(9,11) + "-" + mon.subString(5,8) + "-" + mon.subString(0,4);
+		hh = toDateTimeString(actdt,"HH",timezone);
+		ampm = "AM";
+		if(hh.toNumber() > 12)
+		{
+			ampm = "PM";
+			hh = hh.toNumber() % 12;
+			hh = hh.toString();
+		}
+		tim = toDateTimeString(actdt,"mm:ss",timezone);
+		actdatetime = dates + " " + hh + ":" + tim + " " + ampm;
+		// 	info actdatetime;
+		change = reversion.get("change_status");
+		changes = change.get("total");
+		if(changes == null)
+		{
+			changes = 1;
+		}
+		if(nameofrev.len() > 100)
+		{
+			nameofrev = nameofrev.subString(0,97) + "...";
+		}
+		row = {"Version Name":nameofrev,"User":userlogin,"Commit time":actdatetime,"Changes":changes};
+		rowlist.add(row);
+	}
+	elements.add({"type":"table","headers":{"Version Name","User","Commit time","Changes"},"rows":rowlist,"style":{"width":{"25","25","25","25"},"text_align":{"center","center","center","center"}}});
+	// 	elements.add({"type":"buttons","buttons":{{"label":"+ Comment","type":"invoke.function","name":"CreategistComment","id":gid,"emotion":"positive"}}});
+	sections.add({"id":1,"elements":elements});
+}
+else if(tabid.equalsIgnoreCase("startab"))
+{
+	gistfiles = gist.get("files");
+	gistfilesc = gistfiles.keys();
+	name = gistfilesc.get(0);
+	// 	content = gistfiles.get(name).get("content");
+	// 	size = gistfiles.get(name).get("size");
+	desc = gist.get("description");
+	url = gist.get("html_url");
+	urlrev = url + "/revisions";
+	if(name.len() > 100)
+	{
+		name = name.subString(0,96) + "...";
+	}
+	elements.add({"type":"text","text":"Gist : " + "[" + name + "](" + urlrev + ")"});
+	if(desc == null)
+	{
+		desc = name;
+	}
+	if(desc.len() > 256)
+	{
+		desc = desc.subString(0,250) + "...";
+	}
+	elements.add({"type":"text","text":desc});
+	elements.add({"type":"divider"});
+	gid = gist.get("id");
+	header = {"title":"Gist - Revision","navigation":"continue"};
+	// 	buttons = List();
+	// 	buttons.add({"label":"Next","type":"invoke.function","name":"nextpagefunc","id":page + ".." + gid});
+	// 	footer = {"buttons":buttons};
+	history = gist.get("history");
+	rowlist = list();
+	i = 1;
+	elements.add({"type":"text","text":"Revision Details : "});
+	for each  reversion in gist.get("history")
+	{
+		revisionversion = reversion.get("version");
+		gistrevision = invokeurl
+		[
+			url :"https://api.github.com/gists/" + gistid + "/" + revisionversion + "?per_page=30&page=1"
+			type :GET
+			parameters:""
+			detailed:false
+			connection:"githubgist"
+			content-type:"application/vnd.github+json"
+		];
+		// 	info gistrevision;
+		urlrev = gistrevision.get("html_url") + "/" + revisionversion;
+		// 	info urlrev;
+		namerev = gistrevision.get("files");
+		namerevision = namerev.keys();
+		nameofrev = namerevision.get(0);
+		userin = reversion.get("user");
+		userlogin = userin.get("login");
+		// 	info userlogin;
+		commit = reversion.get("committed_at");
+		info commit;
+		//2024-02-21 12:00:00
+		committed = commit.subString(0,4) + "-" + commit.subString(5,7) + "-" + commit.subString(8,10) + " " + commit.substring(11,19);
+		//  committedes = commit.subString(0,4) + "-" + commit.subString(5,7) + "-" + commit.subString(8,10);
+		// 	info committed;
+		actdt = committed.unixEpoch("Europe/London");
+		mon = toDateTimeString(actdt,"yyyy-MMM-dd",timezone);
+		dates = mon.subString(9,11) + "-" + mon.subString(5,8) + "-" + mon.subString(0,4);
+		hh = toDateTimeString(actdt,"HH",timezone);
+		ampm = "AM";
+		if(hh.toNumber() > 12)
+		{
+			ampm = "PM";
+			hh = hh.toNumber() % 12;
+			hh = hh.toString();
+		}
+		tim = toDateTimeString(actdt,"mm:ss",timezone);
+		actdatetime = dates + " " + hh + ":" + tim + " " + ampm;
+		//  actdt = committed.unixEpoch("GMT");
+		// actdt = committed.gettime(12,true);
+		// info actdt;
+		// datetime = committedes+" "+actdt;
+		// actdatetime = toDateTimeString(datetime,"dd-MMM-yyyy / HH:mm:ss",timezone);
+		// stringdate = strdate.subString(4,6)+"-"+strdate.subString(0,3)+"-"+strdate.subString(8,12)+" "+strdate.subString(13,21);
+		// actdatetime = stringdate.getDateTime(12,true);
+		// info actdatetime;
+		// 	info actdatetime;
+		change = reversion.get("change_status");
+		changes = change.get("total");
+		if(changes == null)
+		{
+			changes = 1;
+		}
+		if(nameofrev.len() > 100)
+		{
+			nameofrev = nameofrev.subString(0,97) + "...";
+		}
+		row = {"Version Name":nameofrev,"User":userlogin,"Commit time":actdatetime,"Changes":changes};
+		rowlist.add(row);
+		info rowlist.size();
+	}
+	elements.add({"type":"table","headers":{"Version Name","User","Commit time","Changes"},"rows":rowlist,"style":{"width":{"25","25","25","25"},"text_align":{"center","center","center","center"}}});
+	// 	elements.add({"type":"buttons","buttons":{{"label":"+ Comment","type":"invoke.function","name":"CreategistComment","id":gid,"emotion":"positive"}}});
+	sections.add({"id":1,"elements":elements});
+}
+return {"type":"applet","tabs":tabsArr,"active_tab":tabid,"sections":sections,"header":header,"footer":footer};

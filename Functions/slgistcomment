@@ -1,0 +1,15 @@
+
+//sample layout button handler
+info target;
+info arguments;
+gid = arguments.get("key");
+info gid;
+if(gid.len() > 10)
+{
+	tabid = "slashcommandscall";
+	return {"type":"form","title":"Comment","name":"Comment","hint":"Add Your Comment","button_label":"Comment","inputs":{{"label":"Comment","name":"textarea","placeholder":"Add a Comment","min_length":"0","max_length":"500","mandatory":true,"type":"textarea"},{"name":"hidden","value":gid + ".." + tabid,"type":"hidden"}},"action":{"type":"invoke.function","name":"tocomment"}};
+}
+else
+{
+	return {"type":"form","title":"Create","name":"gistform","hint":"Create your Gist","button_label":"Create","inputs":{{"label":"Description","name":"gistdescription","placeholder":"You Gist Description goes here","min_length":"0","max_length":"256","mandatory":true,"type":"textarea"},{"label":"Public","name":"public","value":false,"type":"toggle"},{"label":"Gist Type","name":"radio","mandatory":true,"type":"radio","trigger_on_change":true,"options":{{"value":"codegist","label":"Code"},{"value":"filegist","label":"File"}}},{"name":"hidden","value":"slashcall","type":"hidden"}},"action":{"type":"invoke.function","name":"addgists"}};
+}
